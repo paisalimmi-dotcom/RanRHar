@@ -59,7 +59,14 @@ The project is designed for AI multi-agent development using a strict architectu
    - Security/Auth Agent (RBAC + RLS)
    - Backend Agent (services)
    - Frontend Agent (screens/layouts)
-   - QA Agent (E2E tests)
+   - [x] QA Agent (E2E tests)
+
+### Feature Implementation
+- Feature-01 /menu/[tableCode] scaffold
+  - [x] Route created (`apps/web/src/app/menu/[tableCode]/page.tsx`)
+  - [x] Feature module structure (`apps/web/src/features/menu`)
+  - [x] Types, Service, Hook, Component created
+  - [x] Minimal UI with placeholders and loading state
 
 ---
 
