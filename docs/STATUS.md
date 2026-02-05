@@ -81,3 +81,28 @@ The project is designed for AI multi-agent development using a strict architectu
 ## Last Updated
 - Phase: Scaffold completed, ready for logic implementation
 - Git status: Clean, synced with `origin/main`
+
+---
+
+## Latest Update (2026-02-05)
+
+### Environment & Tooling
+- pnpm workspace configured and installed successfully
+- Turborepo dev pipeline running correctly
+- `pnpm dev` runs web and worker without errors
+
+### Customer Menu MVP
+- Dynamic route `/menu/[tableCode]` implemented
+- Menu data loading via feature-based hooks
+- Client Component boundaries validated
+- Mock restaurant, branch, and menu data displayed successfully
+
+### Current State
+✅ Scaffolding phase completed  
+✅ Menu browsing MVP functional  
+
+### Next Planned Phase
+🚧 Phase 4: Customer Ordering Flow
+- Implement Cart state management
+- Connect Menu → Cart
+- Mock order submission (no backend yet)

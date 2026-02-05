@@ -1,51 +1,31 @@
-import { useState, useEffect } from 'react';
-import { menuService } from '../services/menu.service';
-import { MenuState } from '../types';
+import { useEffect, useState } from "react";
+import { menuService } from "../services/menu.service";
+import type { MenuCategory, RestaurantInfo } from "../types";
 
-export const useMenu = (tableCode: string) => {
-    const [state, setState] = useState<MenuState>({
-        isLoading: true,
-        error: null,
-        restaurant: null,
-        menu: null,
-    });
+export function useMenu(tableCode: string) {
+    const [loading, setLoading] = useState(true);
+    const [restaurant, setRestaurant] = useState<RestaurantInfo | null>(null);
+    const [categories, setCategories] = useState<MenuCategory[]>([]);
 
     useEffect(() => {
-        if (!tableCode) return;
+        let alive = true;
 
-        let isMounted = true;
-
-        const fetchMenu = async () => {
+        (async () => {
             try {
-                setState((prev) => ({ ...prev, isLoading: true, error: null }));
-                const data = await menuService.getMenuByTableCode(tableCode);
-
-                if (isMounted) {
-                    setState({
-                        isLoading: false,
-                        error: null,
-                        restaurant: data.restaurant,
-                        menu: data.menu,
-                    });
-                }
-            } catch (err) {
-                if (isMounted) {
-                    console.error(err);
-                    setState((prev) => ({
-                        ...prev,
-                        isLoading: false,
-                        error: 'Failed to load menu. Please scan the QR code again.',
-                    }));
-                }
+                setLoading(true);
+                const res = await menuService.getMenuForTable(tableCode);
+                if (!alive) return;
+                setRestaurant(res.restaurant);
+                setCategories(res.categories);
+            } finally {
+                if (alive) setLoading(false);
             }
-        };
-
-        fetchMenu();
+        })();
 
         return () => {
-            isMounted = false;
+            alive = false;
         };
     }, [tableCode]);
 
-    return state;
-};
+    return { loading, restaurant, categories };
+}

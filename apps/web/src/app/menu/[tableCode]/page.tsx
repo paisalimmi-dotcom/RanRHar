@@ -1,10 +1,9 @@
-import { MenuPage } from '@/features/menu';
+import MenuPage from "@/features/menu/components/MenuPage";
 
-export default async function Page({
+export default function Page({
     params,
 }: {
-    params: Promise<{ tableCode: string }>;
+    params: { tableCode: string };
 }) {
-    const { tableCode } = await params;
-    return <MenuPage tableCode={tableCode} />;
+    return <MenuPage tableCode={params.tableCode} />;
 }
