@@ -106,3 +106,9 @@ The project is designed for AI multi-agent development using a strict architectu
 - Implement Cart state management
 - Connect Menu → Cart
 - Mock order submission (no backend yet)
+
+✅ pnpm install working (Next.js dev OK)
+
+✅ pnpm workspace files committed
+
+⏭ Next: fix menu route/client component boundaries + add starter UI for /menu/[tableCode]
