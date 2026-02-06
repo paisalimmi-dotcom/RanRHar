@@ -1,76 +1,142 @@
 'use client';
 
 import { useMemo } from 'react';
+import Image from 'next/image';
+import { CartProvider, useCart, CartSummary } from '../../cart';
+import type { MenuCategory, RestaurantInfo } from '../types';
 
-type MenuItem = { id: string; name: string; priceTHB: number };
-type MenuCategory = { id: string; name: string; items: MenuItem[] };
+type MenuPageProps = {
+    tableCode: string;
+    initialData: {
+        restaurant: RestaurantInfo;
+        categories: MenuCategory[];
+    };
+};
 
-const mockRestaurant = { name: 'RanRHar (Mock)', branch: 'Branch 001 (Mock)' };
-
-function getMockMenu(): MenuCategory[] {
-    return [
-        {
-            id: 'cat-1',
-            name: 'Recommended',
-            items: [
-                { id: 'm-1', name: 'Signature Dish', priceTHB: 199 },
-                { id: 'm-2', name: 'Iced Tea', priceTHB: 45 },
-            ],
-        },
-    ];
-}
-
-export default function MenuPage({ tableCode }: { tableCode: string }) {
-    const menu = useMemo(() => getMockMenu(), []);
+function MenuContent({ data }: { data: MenuPageProps['initialData'] }) {
+    const { restaurant, categories } = data;
+    const { addToCart } = useCart();
 
     return (
-        <main style={{ padding: 24, fontFamily: 'system-ui, sans-serif' }}>
+        <main style={{ padding: 24, paddingBottom: 100, fontFamily: 'system-ui, sans-serif' }}>
             <h1 style={{ fontSize: 32, marginBottom: 8 }}>Menu</h1>
             <div style={{ marginBottom: 16 }}>
-                <div><b>Table:</b> {tableCode}</div>
-                <div><b>Restaurant:</b> {mockRestaurant.name}</div>
-                <div><b>Branch:</b> {mockRestaurant.branch}</div>
+                <div><b>Table:</b> {restaurant.tableCode}</div>
+                <div><b>Restaurant:</b> {restaurant.name}</div>
+                <div><b>Branch:</b> {restaurant.branchName}</div>
             </div>
 
-            {menu.map((cat) => (
+            {categories.map((cat) => (
                 <section key={cat.id} style={{ marginTop: 20 }}>
                     <h2 style={{ fontSize: 22, marginBottom: 10 }}>{cat.name}</h2>
 
-                    <div style={{ display: 'grid', gap: 10, maxWidth: 520 }}>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                        gap: 16,
+                        maxWidth: 1200
+                    }}>
                         {cat.items.map((it) => (
                             <div
                                 key={it.id}
                                 style={{
-                                    border: '1px solid #ddd',
-                                    borderRadius: 12,
-                                    padding: 12,
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
+                                    border: '1px solid #e0e0e0',
+                                    borderRadius: 16,
+                                    overflow: 'hidden',
+                                    backgroundColor: '#fff',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                                    transition: 'transform 0.2s, box-shadow 0.2s',
+                                    cursor: 'pointer',
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(-4px)';
+                                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.12)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
                                 }}
                             >
-                                <div>
-                                    <div style={{ fontWeight: 700 }}>{it.name}</div>
-                                    <div style={{ opacity: 0.8 }}>฿ {it.priceTHB}</div>
-                                </div>
+                                {it.imageUrl ? (
+                                    <div style={{ position: 'relative', width: '100%', paddingBottom: '75%', backgroundColor: '#f5f5f5' }}>
+                                        <Image
+                                            src={it.imageUrl}
+                                            alt={it.name}
+                                            fill
+                                            style={{ objectFit: 'cover' }}
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div style={{ width: '100%', paddingBottom: '75%', background: 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)' }} />
+                                )}
 
-                                <button
-                                    type="button"
-                                    style={{
-                                        padding: '8px 12px',
-                                        borderRadius: 10,
-                                        border: '1px solid #aaa',
-                                        cursor: 'pointer',
-                                    }}
-                                    onClick={() => alert(`Add: ${it.name}`)}
-                                >
-                                    Add
-                                </button>
+                                <div style={{ padding: 16 }}>
+                                    <div style={{
+                                        fontWeight: 600,
+                                        fontSize: 18,
+                                        marginBottom: 8,
+                                        color: '#1a1a1a'
+                                    }}>
+                                        {it.name}
+                                    </div>
+
+                                    <div style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        marginTop: 12
+                                    }}>
+                                        <div style={{
+                                            fontSize: 20,
+                                            fontWeight: 700,
+                                            color: '#2563eb'
+                                        }}>
+                                            ฿{it.priceTHB}
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            style={{
+                                                padding: '10px 20px',
+                                                borderRadius: 12,
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                backgroundColor: '#2563eb',
+                                                color: '#fff',
+                                                fontWeight: 600,
+                                                fontSize: 14,
+                                                transition: 'background-color 0.2s',
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.backgroundColor = '#1d4ed8';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.backgroundColor = '#2563eb';
+                                            }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                addToCart(it);
+                                            }}
+                                        >
+                                            Add to Cart
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         ))}
                     </div>
                 </section>
             ))}
         </main>
+    );
+}
+
+export default function MenuPage({ tableCode, initialData }: MenuPageProps) {
+    return (
+        <CartProvider>
+            <MenuContent data={initialData} />
+            <CartSummary />
+        </CartProvider>
     );
 }
