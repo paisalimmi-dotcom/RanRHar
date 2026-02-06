@@ -8,6 +8,7 @@ export type MenuItem = {
     id: string;
     name: string;
     priceTHB: number;
+    imageUrl?: string;
 };
 
 export type MenuCategory = {

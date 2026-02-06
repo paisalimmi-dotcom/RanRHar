@@ -2,25 +2,19 @@
 
 import { useCart } from '../hooks/useCart';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function CartSummary() {
     const { items, totalItems, totalPrice, addToCart, decreaseQuantity, removeItem, clearCart } = useCart();
     const [isExpanded, setIsExpanded] = useState(false);
+    const router = useRouter();
 
     if (totalItems === 0) {
         return null;
     }
 
     const handlePlaceOrder = () => {
-        console.log('Placing order:', {
-            items,
-            totalItems,
-            totalPrice,
-            timestamp: new Date().toISOString()
-        });
-        alert('Order placed successfully! (Check console for payload)');
-        clearCart();
-        setIsExpanded(false);
+        router.push('/checkout');
     };
 
     return (
