@@ -5,6 +5,7 @@ import { useCart } from '@/features/cart/hooks/useCart';
 import { createOrder } from '@/features/order/order.store';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { AuthGuard } from '@/features/auth';
 
 function CheckoutContent() {
     const { items, totalItems, totalPrice, clearCart } = useCart();
@@ -153,8 +154,10 @@ function CheckoutContent() {
 
 export default function CheckoutPage() {
     return (
-        <CartProvider>
-            <CheckoutContent />
-        </CartProvider>
+        <AuthGuard allowedRoles={['staff', 'cashier']}>
+            <CartProvider>
+                <CheckoutContent />
+            </CartProvider>
+        </AuthGuard>
     );
 }
