@@ -136,3 +136,57 @@ The project is designed for AI multi-agent development using a strict architectu
 - Cart summary with quantity controls
 - Local state via React Context (no persistence)
 - Build verified (pnpm build)
+
+### ✅ Feature-03: Image-Based Menu UI
+- Menu items now display with prominent images (4:3 aspect ratio)
+- Modern card layout with hover effects and shadows
+- Responsive grid (1-4 columns based on screen width)
+- 9 mock items across 3 categories (Recommended, Main Dishes, Beverages)
+- All items include placeholder images from picsum.photos
+- Cart integration unchanged and working
+- Build verified (pnpm build)
+
+### ✅ Feature-04: Checkout & Order (Mock)
+- Complete sales loop: Menu → Cart → Checkout → Order Success
+- Order types defined in `src/shared/types/order.ts`
+- Order store with localStorage persistence (`src/features/order/order.store.ts`)
+- Checkout page at `/checkout` with cart summary and totals
+- Order success page at `/order/success/[id]` with order details
+- Orders persist across page reloads
+- Cart clears after successful order placement
+- Build verified (pnpm build)
+
+**Files Created:**
+- `apps/web/src/shared/types/order.ts`
+- `apps/web/src/features/order/order.store.ts`
+- `apps/web/src/app/checkout/page.tsx`
+- `apps/web/src/app/order/success/[id]/page.tsx`
+
+**Files Modified:**
+- `apps/web/src/features/cart/components/CartSummary.tsx` (navigate to checkout)
+
+**How to test:**
+1. Navigate to `/menu/A12`
+2. Add items to cart
+3. Click cart summary → "Place Order"
+4. Review checkout → "Place Order"
+5. View order success page
+6. Reload page → order persists
+7. Return to menu → cart is empty
+
+# Project Status Log
+
+## 2026-02-06
+### Feature-04: Checkout & Order (Mock)
+- Completed end-to-end sales loop
+- Order is stored as snapshot (decoupled from cart)
+- Persistence via localStorage (`ranrhar_orders`)
+- Build verified: pnpm build ✅
+
+### Decisions
+- Auth & Role will be implemented before image upload
+- Backend API deferred
+
+### Next
+- Start Feature-05: Authentication & Role Management
+
