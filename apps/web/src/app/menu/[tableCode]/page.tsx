@@ -1,4 +1,5 @@
 import MenuPage from '@/features/menu/components/MenuPage';
+import { menuService } from '@/features/menu/services/menu.service';
 
 export default async function Page({
     params,
@@ -7,7 +8,8 @@ export default async function Page({
 }) {
     const { tableCode } = await params;
 
-    // Server Component: ดึง params ได้
-    // แล้วส่งให้ Client Component (MenuPage) ที่ใช้ hooks ได้
-    return <MenuPage tableCode={tableCode} />;
+    // Server Component: Fetch data
+    const initialData = await menuService.getMenuForTable(tableCode);
+
+    return <MenuPage tableCode={tableCode} initialData={initialData} />;
 }
