@@ -190,3 +190,48 @@ The project is designed for AI multi-agent development using a strict architectu
 ### Next
 - Start Feature-05: Authentication & Role Management
 
+---
+
+## 2026-02-06 (Later)
+### ✅ Feature-05: Authentication & Role Management (Mock)
+- Mock authentication using localStorage (API-ready architecture)
+- Role-based access control with 3 roles: owner, staff, cashier
+- Login page with email input and role selector
+- Unauthorized page with error message
+- Auth store with login/logout/getSession functions
+- AuthGuard component for route protection
+- LogoutButton component for user logout
+- Protected routes:
+  - `/admin` (owner only)
+  - `/orders` (owner, staff)
+  - `/checkout` (staff, cashier)
+- Session persistence across page reloads
+- Build verified (pnpm build)
+
+**Files Created:**
+- `apps/web/src/features/auth/auth.types.ts`
+- `apps/web/src/features/auth/auth.store.ts`
+- `apps/web/src/features/auth/auth.guard.tsx`
+- `apps/web/src/features/auth/LogoutButton.tsx`
+- `apps/web/src/features/auth/index.ts`
+- `apps/web/src/app/login/page.tsx`
+- `apps/web/src/app/unauthorized/page.tsx`
+- `apps/web/src/app/admin/page.tsx`
+- `apps/web/src/app/orders/page.tsx`
+
+**Files Modified:**
+- `apps/web/src/app/checkout/page.tsx` (added AuthGuard)
+
+**How to test:**
+1. Navigate to `/login`
+2. Enter email and select role
+3. Click Login → redirects to menu
+4. Try accessing `/admin` with different roles
+5. Try accessing `/orders` with different roles
+6. Try accessing `/checkout` with different roles
+7. Refresh page → session persists
+8. Logout → redirects to login
+
+**Next:**
+- Feature-06: Image Upload & Management (if needed)
+- Backend API integration (when ready)
