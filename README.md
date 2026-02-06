@@ -7,10 +7,11 @@ Free &amp; Freemium Restaurant Operating System
 - Feature-02: Customer Cart
 - Feature-03: Image-Based Menu UI
 - Feature-04: Checkout & Order (Mock)
+- Feature-05: Authentication & Role Management (Mock)
 
 ### In Progress
-- Feature-05: Authentication & Role Management
+- Feature-06A: Backend API Integration (Auth & Order)
 
 ### Notes
-- Orders are stored in localStorage (mock persistence)
-- Architecture is API-ready for backend integration
+- Frontend currently uses mock persistence (localStorage)
+- Architecture is API-ready and transitioning to backend

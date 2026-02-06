@@ -235,3 +235,22 @@ The project is designed for AI multi-agent development using a strict architectu
 **Next:**
 - Feature-06: Image Upload & Management (if needed)
 - Backend API integration (when ready)
+
+## 2026-02-06
+
+### Feature-05: Authentication & Role Management (Mock)
+- Completed mock authentication with role-based access control
+- Roles implemented: owner, staff, cashier
+- Route protection enforced (/admin, /orders, /checkout)
+- Session persisted via localStorage
+- Build verified: pnpm build ✅
+- Milestone tagged: v0.5.0-auth-role-mock
+
+### Decision
+- Proceed with Feature-06A: Backend API Integration
+- Rationale: unlock data persistence, role-based orders, and future payment
+
+### Next
+- Replace mock auth & order storage with backend API
+- Keep existing UX unchanged
+
