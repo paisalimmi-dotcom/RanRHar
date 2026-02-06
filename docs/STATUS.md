@@ -111,4 +111,28 @@ The project is designed for AI multi-agent development using a strict architectu
 
 ✅ pnpm workspace files committed
 
-⏭ Next: fix menu route/client component boundaries + add starter UI for /menu/[tableCode]
+
+### Feature-02 Cart (Customer)
+- [x] Cart Feature Module (Provider, Context, Hooks)
+- [x] Cart Summary UI (Sticky footer, Expandable list)
+- [x] Integration with Menu (Add to cart button)
+- [x] Mock Place Order
+
+**Changes:**
+- Created `apps/web/src/features/cart/` module.
+- Refactored `MenuPage` to use `CartProvider`.
+- Added `CartSummary` component.
+
+**How to test:**
+1. Navigate to `/menu/A12`.
+2. Click "Add" on menu items.
+3. Observe Cart Summary at the bottom updating (Total items/Price).
+4. Click Cart Summary to expand.
+5. Use + / - to adjust quantity.
+6. Click "Place Order" and check console for payload.
+
+### ✅ Feature-02: Customer Cart (Local)
+- Menu page supports add-to-cart
+- Cart summary with quantity controls
+- Local state via React Context (no persistence)
+- Build verified (pnpm build)
