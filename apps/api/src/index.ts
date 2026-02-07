@@ -3,6 +3,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { authRoutes } from './routes/auth';
 import { orderRoutes } from './routes/orders';
+import { paymentRoutes } from './routes/payments';
 import './db'; // Initialize database connection
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
@@ -25,6 +26,7 @@ async function start() {
         // Register routes
         await fastify.register(authRoutes);
         await fastify.register(orderRoutes);
+        await fastify.register(paymentRoutes);
 
         // Health check
         fastify.get('/health', async () => {
