@@ -25,12 +25,13 @@ Free & Freemium Restaurant Operating System
 - ✅ HTTPS enforcement (production)
 
 ### ⚠️ Critical Gap
-- **Test Coverage**: 3/10 (E2E smoke test script added, not yet executed)
+- **Performance Tuning**: Initial profiling needed for large menus.
 
 ### 📚 Tech Stack
 - **Frontend**: Next.js 15 (App Router), React 19, TypeScript
 - **Backend**: Fastify, PostgreSQL, JWT
 - **Monorepo**: Turborepo + pnpm workspaces
+- **Testing**: Playwright (E2E)
 - **Security**: Helmet, Rate Limit, CORS
 
 ### 🚀 Quick Start
@@ -44,8 +45,8 @@ cd apps/api && pnpm dev
 # Start Web
 cd apps/web && pnpm dev
 
-# Run smoke tests
-.\scripts\smoke-test.ps1
+# Run E2E tests (requires running app)
+cd apps/web && pnpm exec playwright test
 ```
 
 ### 📖 Documentation
@@ -56,6 +57,6 @@ cd apps/web && pnpm dev
 
 ---
 
-**Last Updated**: 2026-02-07  
-**Phase**: 8 (Feature Completion & Testing)  
-**Next**: Add E2E tests, Feature-09 (Inventory)
+**Last Updated**: 2026-02-07
+**Phase**: 10 (E2E Testing & Performance)
+**Next**: Performance Profiling, WebSocket Integration
