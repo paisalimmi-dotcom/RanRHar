@@ -307,3 +307,51 @@ The project is designed for AI multi-agent development using a strict architectu
 - Update frontend API URL for production
 - Feature-07: Payment integration or dashboard features
 
+---
+
+## 2026-02-07
+
+### ✅ Feature-07: Admin Dashboard — Order Management (Phase 1)
+- Order status tracking with three states: PENDING, CONFIRMED, COMPLETED
+- Database schema updated with status column and index
+- Migration script created for existing databases
+- Backend API enhancements:
+  - PATCH `/orders/:id/status` endpoint with RBAC (owner, staff only)
+  - GET `/orders` returns actual status from database
+  - POST `/orders` sets default status to PENDING
+- Frontend order management UI:
+  - Enhanced `/orders` page with table layout
+  - Color-coded status badges (yellow/blue/green)
+  - Status dropdown for owner/staff roles
+  - Optimistic UI updates with error handling
+  - Real-time order list with refresh capability
+- Build verified: pnpm -r lint ✅ | pnpm -r build ✅
+- Commits: 2 (backend + frontend)
+- Pushed to origin/main
+
+**Files Created:**
+- `apps/api/src/db/migration-001-add-order-status.sql`
+
+**Files Modified (Backend):**
+- `apps/api/src/db/schema.sql` - Added status column with CHECK constraint
+- `apps/api/src/routes/orders.ts` - Added PATCH endpoint, updated GET/POST
+
+**Files Modified (Frontend):**
+- `apps/web/src/shared/types/order.ts` - Expanded OrderStatus type
+- `apps/web/src/lib/api-client.ts` - Added PATCH method support
+- `apps/web/src/features/order/order.api.ts` - Added updateOrderStatus function
+- `apps/web/src/app/orders/page.tsx` - Complete UI rebuild with status management
+
+**How to test:**
+1. Run migration: `psql -U postgres -d ranrhar -f apps/api/src/db/migration-001-add-order-status.sql`
+2. Start API: `cd apps/api && pnpm dev`
+3. Start Web: `cd apps/web && pnpm dev`
+4. Login as owner/staff at `/login`
+5. Navigate to `/orders` to view and manage order statuses
+6. Test RBAC: cashier role cannot access `/orders`
+
+**Next:**
+- Feature-07 Phase 2: Order filtering and search
+- Feature-08: Payment integration
+- Production deployment preparation
+
