@@ -1,12 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
 import Image from 'next/image';
 import { CartProvider, useCart, CartSummary } from '../../cart';
 import type { MenuCategory, RestaurantInfo } from '../types';
 
 type MenuPageProps = {
-    tableCode: string;
     initialData: {
         restaurant: RestaurantInfo;
         categories: MenuCategory[];
@@ -132,7 +130,7 @@ function MenuContent({ data }: { data: MenuPageProps['initialData'] }) {
     );
 }
 
-export default function MenuPage({ tableCode, initialData }: MenuPageProps) {
+export default function MenuPage({ initialData }: MenuPageProps) {
     return (
         <CartProvider>
             <MenuContent data={initialData} />

@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function CartSummary() {
-    const { items, totalItems, totalPrice, addToCart, decreaseQuantity, removeItem, clearCart } = useCart();
+    const { items, totalItems, totalPrice, addToCart, decreaseQuantity, clearCart } = useCart();
     const [isExpanded, setIsExpanded] = useState(false);
     const router = useRouter();
 

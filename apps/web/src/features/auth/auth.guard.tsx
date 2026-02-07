@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Role } from './auth.types'
 import { authStore } from './auth.store'
@@ -12,11 +12,13 @@ type AuthGuardProps = {
 
 export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
     const router = useRouter()
-    const [isAuthorized, setIsAuthorized] = useState(false)
 
+    // Compute authorization synchronously from session + allowedRoles
+    const session = authStore.getSession()
+    const isAuthorized = session && allowedRoles.includes(session.role)
+
+    // useEffect only for navigation side-effects (redirects)
     useEffect(() => {
-        const session = authStore.getSession()
-
         if (!session) {
             router.push('/login')
             return
@@ -26,10 +28,9 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
             router.push('/unauthorized')
             return
         }
+    }, [router, allowedRoles, session])
 
-        setIsAuthorized(true)
-    }, [router, allowedRoles])
-
+    // Render children only when authorized
     if (!isAuthorized) {
         return null
     }

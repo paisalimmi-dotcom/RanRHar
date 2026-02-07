@@ -1,4 +1,4 @@
-import type { AuthSession, Role } from './auth.types'
+import type { AuthSession } from './auth.types'
 import { authApi } from './auth.api'
 
 const SESSION_KEY = 'auth_session'

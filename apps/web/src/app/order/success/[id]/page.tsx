@@ -2,36 +2,15 @@
 
 import { getOrderById } from '@/features/order/order.store';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { Order } from '@/shared/types/order';
+import { useMemo } from 'react';
 
 export default function OrderSuccessPage() {
     const params = useParams();
     const router = useRouter();
     const orderId = params.id as string;
 
-    const [order, setOrder] = useState<Order | null>(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        // Fetch order from localStorage
-        const fetchedOrder = getOrderById(orderId);
-        setOrder(fetchedOrder);
-        setLoading(false);
-    }, [orderId]);
-
-    if (loading) {
-        return (
-            <div style={{
-                minHeight: '100vh',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-            }}>
-                <div style={{ fontSize: '18px', color: '#666' }}>Loading...</div>
-            </div>
-        );
-    }
+    // Compute order synchronously since getOrderById is synchronous (localStorage lookup)
+    const order = useMemo(() => getOrderById(orderId), [orderId]);
 
     if (!order) {
         return (
@@ -56,7 +35,7 @@ export default function OrderSuccessPage() {
                         Order Not Found
                     </h1>
                     <p style={{ color: '#666', marginBottom: '24px' }}>
-                        The order you're looking for doesn't exist or has been removed.
+                        The order you&apos;re looking for doesn&apos;t exist or has been removed.
                     </p>
                     <button
                         onClick={() => router.push('/menu/A12')}

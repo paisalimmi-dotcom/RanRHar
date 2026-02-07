@@ -11,5 +11,5 @@ export default async function Page({
     // Server Component: Fetch data
     const initialData = await menuService.getMenuForTable(tableCode);
 
-    return <MenuPage tableCode={tableCode} initialData={initialData} />;
+    return <MenuPage initialData={initialData} />;
 }
