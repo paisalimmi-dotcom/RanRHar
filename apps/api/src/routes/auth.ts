@@ -5,9 +5,17 @@ import { generateToken, authMiddleware } from '../middleware/auth';
 
 export async function authRoutes(fastify: FastifyInstance) {
     // POST /auth/login - Login with email and password
+    // Security: Strict rate limiting to prevent brute force attacks
     fastify.post<{
         Body: { email: string; password: string };
-    }>('/auth/login', async (request, reply) => {
+    }>('/auth/login', {
+        config: {
+            rateLimit: {
+                max: 5,
+                timeWindow: '15 minutes',
+            },
+        },
+    }, async (request, reply) => {
         const { email, password } = request.body;
 
         if (!email || !password) {

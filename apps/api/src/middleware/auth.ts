@@ -3,8 +3,17 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+// Security: Enforce strong JWT secret
 if (!JWT_SECRET) {
-    throw new Error('JWT_SECRET environment variable is required');
+    throw new Error('FATAL: JWT_SECRET environment variable is required');
+}
+
+if (JWT_SECRET.length < 32) {
+    throw new Error('FATAL: JWT_SECRET must be at least 32 characters long. Generate using: openssl rand -base64 32');
+}
+
+if (JWT_SECRET === 'your-secret-key-change-in-production' || JWT_SECRET === 'change-me') {
+    throw new Error('FATAL: JWT_SECRET must be changed from default value. Generate using: openssl rand -base64 32');
 }
 
 export interface JWTPayload {
@@ -35,6 +44,7 @@ export async function authMiddleware(
 
         request.user = decoded;
     } catch {
+        // Security: Don't leak token validation details
         return reply.status(401).send({ error: 'Unauthorized: Invalid token' });
     }
 }
@@ -56,5 +66,6 @@ export function requireRole(...allowedRoles: Array<'owner' | 'staff' | 'cashier'
 }
 
 export function generateToken(payload: JWTPayload): string {
-    return jwt.sign(payload, JWT_SECRET!, { expiresIn: '7d' });
+    // Security: Reduced from 7d to 1h to minimize token theft impact
+    return jwt.sign(payload, JWT_SECRET!, { expiresIn: '1h' });
 }

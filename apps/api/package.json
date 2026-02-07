@@ -10,18 +10,22 @@
     },
     "dependencies": {
         "@fastify/cors": "^8.4.2",
-        "fastify": "^4.25.2",
-        "pg": "^8.11.3",
-        "jsonwebtoken": "^9.0.2",
+        "@fastify/helmet": "^13.0.2",
+        "@fastify/rate-limit": "^10.3.0",
+        "@fastify/type-provider-typebox": "^6.1.0",
+        "@sinclair/typebox": "^0.34.48",
         "bcryptjs": "^2.4.3",
-        "dotenv": "^16.3.1"
+        "dotenv": "^16.3.1",
+        "fastify": "^4.25.2",
+        "jsonwebtoken": "^9.0.2",
+        "pg": "^8.11.3"
     },
     "devDependencies": {
+        "@types/bcryptjs": "^2.4.6",
+        "@types/jsonwebtoken": "^9.0.5",
         "@types/node": "^20.10.6",
         "@types/pg": "^8.10.9",
-        "@types/jsonwebtoken": "^9.0.5",
-        "@types/bcryptjs": "^2.4.6",
-        "typescript": "^5.3.3",
-        "tsx": "^4.7.0"
+        "tsx": "^4.7.0",
+        "typescript": "^5.3.3"
     }
 }
