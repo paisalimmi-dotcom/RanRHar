@@ -9,9 +9,13 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
-    "turbo": "^1.10.0",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^9.39.2",
+    "eslint-config-next": "^16.1.6",
     "prettier": "^3.0.0",
-    "typescript": "^5.0.0"
+    "turbo": "^1.10.0",
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.54.0"
   },
   "packageManager": "pnpm@10.28.2"
 }

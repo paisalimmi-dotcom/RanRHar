@@ -34,7 +34,7 @@ export async function authMiddleware(
         const decoded = jwt.verify(token, JWT_SECRET!) as JWTPayload;
 
         request.user = decoded;
-    } catch (error) {
+    } catch {
         return reply.status(401).send({ error: 'Unauthorized: Invalid token' });
     }
 }
