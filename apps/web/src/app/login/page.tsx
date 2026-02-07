@@ -2,23 +2,40 @@
 
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { authStore, type Role } from '@/features/auth'
+import { authStore } from '@/features/auth'
 
 export default function LoginPage() {
     const router = useRouter()
     const [email, setEmail] = useState('')
-    const [role, setRole] = useState<Role>('staff')
+    const [password, setPassword] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState('')
 
-    const handleSubmit = (e: FormEvent) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault()
+        setError('')
 
         if (!email.trim()) {
-            alert('Please enter an email')
+            setError('Please enter an email')
             return
         }
 
-        authStore.login(email, role)
-        router.push('/menu/demo-table')
+        if (!password.trim()) {
+            setError('Please enter a password')
+            return
+        }
+
+        setIsLoading(true)
+
+        try {
+            await authStore.login(email, password)
+            router.push('/menu/demo-table')
+        } catch (err) {
+            console.error('Login error:', err)
+            setError('Invalid email or password')
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     return (
@@ -27,6 +44,12 @@ export default function LoginPage() {
                 <h1 className="text-2xl font-bold text-center mb-6">Login</h1>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                            {error}
+                        </div>
+                    )}
+
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                             Email
@@ -37,33 +60,40 @@ export default function LoginPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter your email"
+                            placeholder="owner@test.com"
                             required
+                            disabled={isLoading}
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-                            Role
+                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                            Password
                         </label>
-                        <select
-                            id="role"
-                            value={role}
-                            onChange={(e) => setRole(e.target.value as Role)}
+                        <input
+                            id="password"
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="owner">Owner</option>
-                            <option value="staff">Staff</option>
-                            <option value="cashier">Cashier</option>
-                        </select>
+                            placeholder="password123"
+                            required
+                            disabled={isLoading}
+                        />
                     </div>
 
                     <button
                         type="submit"
-                        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors font-medium"
+                        disabled={isLoading}
+                        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors font-medium disabled:bg-blue-400 disabled:cursor-not-allowed"
                     >
-                        Login
+                        {isLoading ? 'Logging in...' : 'Login'}
                     </button>
+
+                    <div className="text-sm text-gray-600 text-center mt-4">
+                        <p>Test accounts (password: password123):</p>
+                        <p className="mt-1">owner@test.com | staff@test.com | cashier@test.com</p>
+                    </div>
                 </form>
             </div>
         </div>

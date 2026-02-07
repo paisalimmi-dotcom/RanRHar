@@ -4,12 +4,13 @@ import { CartProvider } from '@/features/cart/CartProvider';
 import { useCart } from '@/features/cart/hooks/useCart';
 import { createOrder } from '@/features/order/order.store';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AuthGuard } from '@/features/auth';
 
 function CheckoutContent() {
     const { items, totalItems, totalPrice, clearCart } = useCart();
     const router = useRouter();
+    const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
     // Redirect if cart is empty
     useEffect(() => {
@@ -18,17 +19,26 @@ function CheckoutContent() {
         }
     }, [totalItems, router]);
 
-    const handlePlaceOrder = () => {
+    const handlePlaceOrder = async () => {
         if (items.length === 0) return;
 
-        // Create order snapshot
-        const order = createOrder(items);
+        setIsPlacingOrder(true);
 
-        // Clear cart
-        clearCart();
+        try {
+            // Create order via API
+            const order = await createOrder(items);
 
-        // Redirect to success page
-        router.push(`/order/success/${order.id}`);
+            // Clear cart
+            clearCart();
+
+            // Redirect to success page
+            router.push(`/order/success/${order.id}`);
+        } catch (error) {
+            console.error('Failed to place order:', error);
+            alert('Failed to place order. Please try again.');
+        } finally {
+            setIsPlacingOrder(false);
+        }
     };
 
     if (totalItems === 0) {
@@ -112,23 +122,24 @@ function CheckoutContent() {
                 {/* Place Order Button */}
                 <button
                     onClick={handlePlaceOrder}
+                    disabled={isPlacingOrder}
                     style={{
                         width: '100%',
                         padding: '16px',
-                        backgroundColor: '#000',
+                        backgroundColor: isPlacingOrder ? '#666' : '#000',
                         color: '#fff',
                         border: 'none',
                         borderRadius: '12px',
                         fontSize: '18px',
                         fontWeight: '700',
-                        cursor: 'pointer',
+                        cursor: isPlacingOrder ? 'not-allowed' : 'pointer',
                         transition: 'transform 0.1s',
                     }}
-                    onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+                    onMouseDown={(e) => !isPlacingOrder && (e.currentTarget.style.transform = 'scale(0.98)')}
                     onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 >
-                    Place Order
+                    {isPlacingOrder ? 'Placing Order...' : 'Place Order'}
                 </button>
 
                 {/* Back Link */}

@@ -1,0 +1,70 @@
+import { FastifyInstance } from 'fastify';
+import bcrypt from 'bcryptjs';
+import { pool } from '../db';
+import { generateToken, authMiddleware } from '../middleware/auth';
+
+export async function authRoutes(fastify: FastifyInstance) {
+    // POST /auth/login - Login with email and password
+    fastify.post<{
+        Body: { email: string; password: string };
+    }>('/auth/login', async (request, reply) => {
+        const { email, password } = request.body;
+
+        if (!email || !password) {
+            return reply.status(400).send({ error: 'Email and password are required' });
+        }
+
+        try {
+            // Find user by email
+            const result = await pool.query(
+                'SELECT id, email, password_hash, role FROM users WHERE email = $1',
+                [email]
+            );
+
+            if (result.rows.length === 0) {
+                return reply.status(401).send({ error: 'Invalid credentials' });
+            }
+
+            const user = result.rows[0];
+
+            // Verify password
+            const isValid = await bcrypt.compare(password, user.password_hash);
+
+            if (!isValid) {
+                return reply.status(401).send({ error: 'Invalid credentials' });
+            }
+
+            // Generate JWT token
+            const token = generateToken({
+                userId: user.id,
+                email: user.email,
+                role: user.role,
+            });
+
+            return reply.send({
+                accessToken: token,
+                user: {
+                    email: user.email,
+                    role: user.role,
+                },
+            });
+        } catch (error) {
+            console.error('Login error:', error);
+            return reply.status(500).send({ error: 'Internal server error' });
+        }
+    });
+
+    // GET /me - Get current user info
+    fastify.get('/me', {
+        preHandler: authMiddleware,
+    }, async (request, reply) => {
+        if (!request.user) {
+            return reply.status(401).send({ error: 'Unauthorized' });
+        }
+
+        return reply.send({
+            email: request.user.email,
+            role: request.user.role,
+        });
+    });
+}
