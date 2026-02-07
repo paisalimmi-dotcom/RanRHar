@@ -254,3 +254,56 @@ The project is designed for AI multi-agent development using a strict architectu
 - Replace mock auth & order storage with backend API
 - Keep existing UX unchanged
 
+---
+
+## 2026-02-06 (Later)
+
+### ✅ Feature-06A: Backend API Integration (Auth & Orders)
+- Replaced localStorage-based auth and orders with real backend API
+- Backend: Fastify + PostgreSQL + JWT authentication
+- Database schema: users and orders tables with RBAC
+- API endpoints:
+  - POST /auth/login (email/password → JWT token)
+  - GET /me (validate token)
+  - POST /orders (create order, requires staff/cashier)
+  - GET /orders (list orders, requires owner/staff)
+- Frontend API adapters:
+  - `api-client.ts` - HTTP client with auto token injection
+  - `auth.api.ts` - Auth API calls
+  - `order.api.ts` - Order API calls
+- Updated `auth.store` to use async API login with password
+- Updated `order.store` to use async API calls with cache fallback
+- Updated login page with password field and error handling
+- Updated checkout page with async order placement
+- Build verified: pnpm build ✅
+- Test accounts: owner@test.com, staff@test.com, cashier@test.com (password: password123)
+
+**Files Created (Backend):**
+- `apps/api/` - Complete backend service
+- `apps/api/src/index.ts` - Fastify server
+- `apps/api/src/db/schema.sql` - Database schema
+- `apps/api/src/middleware/auth.ts` - JWT auth & RBAC
+- `apps/api/src/routes/auth.ts` - Auth endpoints
+- `apps/api/src/routes/orders.ts` - Order endpoints
+
+**Files Created (Frontend):**
+- `apps/web/src/lib/api-client.ts` - HTTP client
+- `apps/web/src/features/auth/auth.api.ts` - Auth adapter
+- `apps/web/src/features/order/order.api.ts` - Order adapter
+
+**Files Modified:**
+- `apps/web/src/features/auth/auth.store.ts` - Async API login
+- `apps/web/src/features/order/order.store.ts` - Async API calls
+- `apps/web/src/app/login/page.tsx` - Password field + async
+- `apps/web/src/app/checkout/page.tsx` - Async order placement
+
+**Breaking Changes:**
+- Users must re-login (localStorage sessions incompatible)
+- Existing localStorage orders NOT migrated
+
+**Next:**
+- Deploy backend API to production
+- Configure production database
+- Update frontend API URL for production
+- Feature-07: Payment integration or dashboard features
+
