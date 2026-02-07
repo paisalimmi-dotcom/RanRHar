@@ -5,10 +5,34 @@ import { CartContextType, CartItem } from './cart.types';
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const CART_STORAGE_KEY = 'ranrhar_cart';
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
     const [items, setItems] = useState<CartItem[]>([]);
+    const [isInitialized, setIsInitialized] = useState(false);
+
+    // Load from localStorage on mount
+    React.useEffect(() => {
+        const stored = localStorage.getItem(CART_STORAGE_KEY);
+        if (stored) {
+            try {
+                setItems(JSON.parse(stored));
+            } catch (e) {
+                console.error('Failed to parse cart items', e);
+            }
+        }
+        setIsInitialized(true);
+    }, []);
+
+    // Save to localStorage on change
+    React.useEffect(() => {
+        if (isInitialized) {
+            localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+        }
+    }, [items, isInitialized]);
 
     const addToCart = useCallback((product: { id: string; name: string; priceTHB: number }) => {
+        // ... existing methods ...
         setItems((prev) => {
             const existing = prev.find((i) => i.id === product.id);
             if (existing) {
@@ -50,7 +74,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         clearCart,
         totalItems,
         totalPrice,
-    }), [items, addToCart, decreaseQuantity, removeItem, clearCart, totalItems, totalPrice]);
+        isInitialized,
+    }), [items, addToCart, decreaseQuantity, removeItem, clearCart, totalItems, totalPrice, isInitialized]);
 
     return (
         <CartContext.Provider value={value}>

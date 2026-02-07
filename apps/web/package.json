@@ -6,19 +6,23 @@
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
-        "lint": "eslint . --max-warnings=0"
+        "lint": "eslint . --max-warnings=0",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui"
     },
     "dependencies": {
         "next": "latest",
         "react": "latest",
         "react-dom": "latest",
-        "ui": "workspace:*",
-        "shared": "workspace:*"
+        "shared": "workspace:*",
+        "ui": "workspace:*"
     },
     "devDependencies": {
+        "@playwright/test": "^1.49.0",
         "@types/node": "latest",
         "@types/react": "latest",
         "@types/react-dom": "latest",
+        "playwright": "^1.49.0",
         "typescript": "latest"
     }
 }

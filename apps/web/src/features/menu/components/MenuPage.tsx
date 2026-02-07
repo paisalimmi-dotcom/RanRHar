@@ -132,9 +132,9 @@ function MenuContent({ data }: { data: MenuPageProps['initialData'] }) {
 
 export default function MenuPage({ initialData }: MenuPageProps) {
     return (
-        <CartProvider>
+        <>
             <MenuContent data={initialData} />
             <CartSummary />
-        </CartProvider>
+        </>
     );
 }

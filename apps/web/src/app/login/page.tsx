@@ -28,8 +28,12 @@ export default function LoginPage() {
         setIsLoading(true)
 
         try {
-            await authStore.login(email, password)
-            router.push('/menu/demo-table')
+            const user = await authStore.login(email, password)
+            if (user.role === 'owner' || user.role === 'staff') {
+                router.push('/orders')
+            } else {
+                router.push('/menu/demo-table')
+            }
         } catch (err) {
             console.error('Login error:', err)
             setError('Invalid email or password')

@@ -8,7 +8,7 @@ export const authStore = {
      * Login with email and password via API
      * Stores token and session in localStorage
      */
-    async login(email: string, password: string): Promise<void> {
+    async login(email: string, password: string): Promise<AuthSession> {
         try {
             const response = await authApi.login(email, password)
 
@@ -21,6 +21,7 @@ export const authStore = {
                 role: response.user.role,
             }
             localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+            return session
         } catch (error) {
             console.error('Login failed:', error)
             throw error

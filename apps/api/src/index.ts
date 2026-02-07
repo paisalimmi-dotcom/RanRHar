@@ -6,6 +6,7 @@ import rateLimit from '@fastify/rate-limit';
 import { authRoutes } from './routes/auth';
 import { orderRoutes } from './routes/orders';
 import { paymentRoutes } from './routes/payments';
+import { inventoryRoutes } from './routes/inventory';
 import './db'; // Initialize database connection
 
 const PORT = parseInt(process.env.PORT || '3001', 10);

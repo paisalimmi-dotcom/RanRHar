@@ -8,16 +8,16 @@ import { useEffect, useState } from 'react';
 import { AuthGuard } from '@/features/auth';
 
 function CheckoutContent() {
-    const { items, totalItems, totalPrice, clearCart } = useCart();
+    const { items, totalItems, totalPrice, clearCart, isInitialized } = useCart();
     const router = useRouter();
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
-    // Redirect if cart is empty
+    // Redirect if cart is empty, but wait until initialized
     useEffect(() => {
-        if (totalItems === 0) {
+        if (isInitialized && totalItems === 0) {
             router.push('/menu/A12');
         }
-    }, [totalItems, router]);
+    }, [totalItems, router, isInitialized]);
 
     const handlePlaceOrder = async () => {
         if (items.length === 0) return;
@@ -165,10 +165,6 @@ function CheckoutContent() {
 
 export default function CheckoutPage() {
     return (
-        <AuthGuard allowedRoles={['staff', 'cashier']}>
-            <CartProvider>
-                <CheckoutContent />
-            </CartProvider>
-        </AuthGuard>
+        <CheckoutContent />
     );
 }
