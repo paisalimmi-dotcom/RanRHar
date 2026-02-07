@@ -8,7 +8,7 @@ The project is designed for AI multi-agent development using a strict architectu
 ---
 
 ## Current Phase
-**Phase 3: Core Implementation (Ready to start)**
+**Phase 8: Feature Completion & Testing (In Progress)**
 
 ---
 
@@ -423,4 +423,49 @@ The project is designed for AI multi-agent development using a strict architectu
 - Complete Feature-08 orders page integration
 - Production deployment
 - Feature-09: Inventory Management
+
+---
+
+## 2026-02-07 (Later)
+
+### ✅ Feature-08: Payment Integration — COMPLETE
+**Backend (70%)** + **Frontend (100%)** = **100% Complete**
+
+**Orders Page Integration:**
+- Payment status column added to orders table
+- "Record Payment" button for unpaid orders
+- PaymentModal integration with real-time status updates
+- Payment status display: ✓ PAID (method) or Record button
+- Optimistic UI updates with error handling
+
+**Files Modified:**
+- `apps/web/src/app/orders/page.tsx` - Payment column + modal integration
+
+**How to test:**
+1. Login as staff/cashier at `/login`
+2. Navigate to `/orders`
+3. Click "Record" on unpaid order
+4. Select payment method (CASH/QR) → Confirm
+5. Verify order shows "✓ PAID (CASH)" status
+
+### ✅ Smoke Test Script Added
+**File Created:**
+- `scripts/smoke-test.ps1` - PowerShell API smoke tests
+
+**Tests:**
+1. Health check (`GET /health`)
+2. Login flow (`POST /auth/login`)
+3. Token validation (`GET /me`)
+4. Get orders (`GET /orders`)
+
+**Usage:**
+```powershell
+cd d:\RanRHar-1
+.\scripts\smoke-test.ps1
+```
+
+**Next:**
+- Production deployment
+- Feature-09: Inventory Management
+- Playwright E2E tests (browser-based)
 

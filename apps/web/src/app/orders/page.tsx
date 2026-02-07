@@ -3,6 +3,9 @@
 import { AuthGuard } from '@/features/auth'
 import { orderApi } from '@/features/order/order.api'
 import type { Order, OrderStatus } from '@/shared/types/order'
+import { PaymentModal } from '@/features/payment/components/PaymentModal'
+import { paymentApi } from '@/features/payment/payment.api'
+import type { Payment, PaymentMethod } from '@/shared/types/payment'
 import { useEffect, useState } from 'react'
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
@@ -17,10 +20,29 @@ export default function OrdersPage() {
     const [error, setError] = useState<string | null>(null)
     const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null)
     const [statusFilter, setStatusFilter] = useState<OrderStatus | 'ALL'>('ALL')
+    const [paymentModal, setPaymentModal] = useState<{ orderId: string; total: number } | null>(null)
+    const [payments, setPayments] = useState<Record<string, Payment>>({})
 
     useEffect(() => {
         loadOrders()
     }, [])
+
+    useEffect(() => {
+        // Load payment status for all orders
+        async function loadPayments() {
+            const paymentData: Record<string, Payment> = {}
+            for (const order of orders) {
+                const payment = await paymentApi.getPayment(order.id).catch(() => null)
+                if (payment) {
+                    paymentData[order.id] = payment
+                }
+            }
+            setPayments(paymentData)
+        }
+        if (orders.length > 0) {
+            loadPayments()
+        }
+    }, [orders])
 
     async function loadOrders() {
         try {
@@ -28,8 +50,8 @@ export default function OrdersPage() {
             setError(null)
             const data = await orderApi.getOrders()
             setOrders(data)
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load orders')
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Failed to load orders')
         } finally {
             setLoading(false)
         }
@@ -49,13 +71,27 @@ export default function OrdersPage() {
 
             // API call
             await orderApi.updateOrderStatus(orderId, newStatus)
-        } catch (err) {
+        } catch (error) {
             // Revert on error
-            setError(err instanceof Error ? err.message : 'Failed to update status')
+            setError(error instanceof Error ? error.message : 'Failed to update status')
             await loadOrders()
         } finally {
             setUpdatingOrderId(null)
         }
+    }
+
+    async function handleRecordPayment(method: PaymentMethod, notes?: string) {
+        if (!paymentModal) return
+
+        const payment = await paymentApi.recordPayment(
+            paymentModal.orderId,
+            paymentModal.total,
+            method,
+            notes
+        )
+        // Update local payment state
+        setPayments(prev => ({ ...prev, [paymentModal.orderId]: payment }))
+        setPaymentModal(null)
     }
 
     // Filter orders based on selected status
@@ -135,6 +171,9 @@ export default function OrdersPage() {
                                             Status
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                                            Payment
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                                             Created
                                         </th>
                                     </tr>
@@ -166,6 +205,21 @@ export default function OrdersPage() {
                                                     <option value="COMPLETED">COMPLETED</option>
                                                 </select>
                                             </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                {payments[order.id] ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-green-600 font-semibold text-sm">✓ PAID</span>
+                                                        <span className="text-xs text-gray-500">({payments[order.id].method})</span>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => setPaymentModal({ orderId: order.id, total: order.total })}
+                                                        className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                                    >
+                                                        Record
+                                                    </button>
+                                                )}
+                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {new Date(order.createdAt).toLocaleString('en-US', {
                                                     year: 'numeric',
@@ -182,6 +236,16 @@ export default function OrdersPage() {
                         </div>
                     )}
                 </div>
+
+                {paymentModal && (
+                    <PaymentModal
+                        orderId={paymentModal.orderId}
+                        orderTotal={paymentModal.total}
+                        isOpen={true}
+                        onClose={() => setPaymentModal(null)}
+                        onConfirm={handleRecordPayment}
+                    />
+                )}
             </div>
         </AuthGuard>
     )
