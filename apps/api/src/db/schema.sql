@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
     items JSONB NOT NULL,
     total DECIMAL(10, 2) NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'CONFIRMED', 'COMPLETED')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
 );
@@ -23,6 +24,7 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_orders_created_by ON orders(created_by);
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 
 -- Seed data for testing
 -- Password for all users: password123
