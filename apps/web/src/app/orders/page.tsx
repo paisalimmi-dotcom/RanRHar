@@ -16,6 +16,7 @@ export default function OrdersPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null)
+    const [statusFilter, setStatusFilter] = useState<OrderStatus | 'ALL'>('ALL')
 
     useEffect(() => {
         loadOrders()
@@ -57,19 +58,49 @@ export default function OrdersPage() {
         }
     }
 
+    // Filter orders based on selected status
+    const filteredOrders = statusFilter === 'ALL'
+        ? orders
+        : orders.filter(order => order.status === statusFilter)
+
+    // Calculate status counts
+    const statusCounts = {
+        ALL: orders.length,
+        PENDING: orders.filter(o => o.status === 'PENDING').length,
+        CONFIRMED: orders.filter(o => o.status === 'CONFIRMED').length,
+        COMPLETED: orders.filter(o => o.status === 'COMPLETED').length,
+    }
+
     return (
         <AuthGuard allowedRoles={['owner', 'staff']}>
             <div className="min-h-screen bg-gray-50 p-8">
                 <div className="max-w-6xl mx-auto">
                     <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-3xl font-bold">Order Management</h1>
-                        <button
-                            onClick={loadOrders}
-                            disabled={loading}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                        >
-                            {loading ? 'Loading...' : 'Refresh'}
-                        </button>
+                        <div>
+                            <h1 className="text-3xl font-bold">Order Management</h1>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Showing {filteredOrders.length} of {orders.length} orders
+                            </p>
+                        </div>
+                        <div className="flex gap-3 items-center">
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value as OrderStatus | 'ALL')}
+                                className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="ALL">All Orders ({statusCounts.ALL})</option>
+                                <option value="PENDING">Pending ({statusCounts.PENDING})</option>
+                                <option value="CONFIRMED">Confirmed ({statusCounts.CONFIRMED})</option>
+                                <option value="COMPLETED">Completed ({statusCounts.COMPLETED})</option>
+                            </select>
+                            <button
+                                onClick={loadOrders}
+                                disabled={loading}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                            >
+                                {loading ? 'Loading...' : 'Refresh'}
+                            </button>
+                        </div>
                     </div>
 
                     {error && (
@@ -78,13 +109,13 @@ export default function OrdersPage() {
                         </div>
                     )}
 
-                    {loading && orders.length === 0 ? (
+                    {loading && filteredOrders.length === 0 ? (
                         <div className="bg-white rounded-lg shadow-md p-8 text-center text-gray-500">
                             Loading orders...
                         </div>
-                    ) : orders.length === 0 ? (
+                    ) : filteredOrders.length === 0 ? (
                         <div className="bg-white rounded-lg shadow-md p-8 text-center text-gray-500">
-                            No orders found
+                            {statusFilter === 'ALL' ? 'No orders found' : `No ${statusFilter.toLowerCase()} orders`}
                         </div>
                     ) : (
                         <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -109,7 +140,7 @@ export default function OrdersPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
-                                    {orders.map((order) => (
+                                    {filteredOrders.map((order) => (
                                         <tr key={order.id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                 #{order.id}
