@@ -72,4 +72,26 @@ export const orderApi = {
             createdAt: order.createdAt,
         }));
     },
+
+    /**
+     * Update order status via API
+     * Requires authentication (owner or staff role)
+     */
+    async updateOrderStatus(orderId: string, status: 'PENDING' | 'CONFIRMED' | 'COMPLETED'): Promise<Order> {
+        const response = await apiClient.patch<CreateOrderResponse>(
+            `/orders/${orderId}/status`,
+            { status },
+            true // Auth required
+        );
+
+        // Transform API response to Order type
+        return {
+            id: response.id,
+            items: response.items,
+            subtotal: response.subtotal,
+            total: response.total,
+            status: response.status,
+            createdAt: response.createdAt,
+        };
+    },
 };

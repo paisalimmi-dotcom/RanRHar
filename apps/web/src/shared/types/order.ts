@@ -8,7 +8,7 @@ export type OrderItem = {
     quantity: number;
 };
 
-export type OrderStatus = 'PENDING';
+export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'COMPLETED';
 
 export type Order = {
     id: string;

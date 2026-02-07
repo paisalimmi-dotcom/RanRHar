@@ -16,7 +16,7 @@ export class APIError extends Error {
 }
 
 interface RequestOptions {
-    method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+    method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     body?: unknown;
     headers?: Record<string, string>;
     requireAuth?: boolean;
@@ -87,6 +87,9 @@ export const apiClient = {
 
     put: <T>(endpoint: string, body: unknown, requireAuth = false) =>
         apiRequest<T>(endpoint, { method: 'PUT', body, requireAuth }),
+
+    patch: <T>(endpoint: string, body: unknown, requireAuth = false) =>
+        apiRequest<T>(endpoint, { method: 'PATCH', body, requireAuth }),
 
     delete: <T>(endpoint: string, requireAuth = false) =>
         apiRequest<T>(endpoint, { method: 'DELETE', requireAuth }),
