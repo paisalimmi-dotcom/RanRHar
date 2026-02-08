@@ -90,7 +90,15 @@ export async function authRoutes(fastify: FastifyInstance) {
     });
 
     // POST /auth/logout - Clear auth cookie
-    fastify.post('/auth/logout', async (request, reply) => {
+    // Security: Rate limit to prevent abuse
+    fastify.post('/auth/logout', {
+        config: {
+            rateLimit: {
+                max: 30,
+                timeWindow: '1 minute',
+            },
+        },
+    }, async (request, reply) => {
         reply.clearCookie('token', { path: '/' });
         return reply.send({ message: 'Logged out successfully' });
     });

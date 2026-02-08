@@ -20,11 +20,13 @@ const HOST = process.env.HOST || '0.0.0.0';
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 // Allowed CORS origins (whitelist)
-const ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'https://ranrhar.com',
-    'https://www.ranrhar.com',
-];
+// Base + CORS_ORIGIN from env (comma-separated for multiple, e.g. "https://app.com,https://www.app.com")
+const BASE_ORIGINS = ['http://localhost:3000'];
+const EXTRA_ORIGINS = (process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+const ALLOWED_ORIGINS = [...new Set([...BASE_ORIGINS, ...EXTRA_ORIGINS])];
 
 const fastify = Fastify({
     logger: {

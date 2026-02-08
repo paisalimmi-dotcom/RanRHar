@@ -105,10 +105,11 @@ async function getGuestUserId(): Promise<number> {
 
 export async function orderRoutes(fastify: FastifyInstance) {
     // POST /orders/guest - Create order as customer (no auth, rate limited)
+    // Security: 10 orders/min per IP to prevent abuse
     fastify.post('/orders/guest', {
         config: {
             rateLimit: {
-                max: 20,
+                max: 10,
                 timeWindow: '1 minute',
             },
         },
