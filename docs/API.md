@@ -4,7 +4,9 @@
 
 RanRHar REST API provides endpoints for authentication, order management, and payment processing. All endpoints use JSON for request and response bodies.
 
-**Base URL**: `http://localhost:3001` (development) or `https://api.yourdomain.com` (production)
+**Base URL**: `http://localhost:3001/v1` (development) or `https://api.yourdomain.com/v1` (production)
+
+**Versioning**: All API routes are prefixed with `/v1`. Health endpoints (`/health`, `/health/ready`) are unversioned.
 
 **Authentication**: JWT Bearer token (except `/auth/login` and `/health`)
 
@@ -16,7 +18,7 @@ RanRHar REST API provides endpoints for authentication, order management, and pa
 
 ## Authentication
 
-### POST /auth/login
+### POST /v1/auth/login
 
 Login with email and password to receive a JWT access token.
 

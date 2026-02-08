@@ -5,7 +5,7 @@ import { orderApi } from '@/features/order/order.api'
 import type { Order, OrderStatus } from '@/shared/types/order'
 import { PaymentModal } from '@/features/payment/components/PaymentModal'
 import { paymentApi } from '@/features/payment/payment.api'
-import type { Payment, PaymentMethod } from '@/shared/types/payment'
+import type { PaymentMethod } from '@/shared/types/payment'
 import { useEffect, useState } from 'react'
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
@@ -21,28 +21,10 @@ export default function OrdersPage() {
     const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null)
     const [statusFilter, setStatusFilter] = useState<OrderStatus | 'ALL'>('ALL')
     const [paymentModal, setPaymentModal] = useState<{ orderId: string; total: number } | null>(null)
-    const [payments, setPayments] = useState<Record<string, Payment>>({})
 
     useEffect(() => {
         loadOrders()
     }, [])
-
-    useEffect(() => {
-        // Load payment status for all orders
-        async function loadPayments() {
-            const paymentData: Record<string, Payment> = {}
-            for (const order of orders) {
-                const payment = await paymentApi.getPayment(order.id).catch(() => null)
-                if (payment) {
-                    paymentData[order.id] = payment
-                }
-            }
-            setPayments(paymentData)
-        }
-        if (orders.length > 0) {
-            loadPayments()
-        }
-    }, [orders])
 
     async function loadOrders() {
         try {
@@ -83,14 +65,14 @@ export default function OrdersPage() {
     async function handleRecordPayment(method: PaymentMethod, notes?: string) {
         if (!paymentModal) return
 
-        const payment = await paymentApi.recordPayment(
+        await paymentApi.recordPayment(
             paymentModal.orderId,
             paymentModal.total,
             method,
             notes
         )
-        // Update local payment state
-        setPayments(prev => ({ ...prev, [paymentModal.orderId]: payment }))
+        // Refresh orders to get updated payment (included in GET /orders)
+        await loadOrders()
         setPaymentModal(null)
     }
 
@@ -206,10 +188,10 @@ export default function OrdersPage() {
                                                 </select>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                {payments[order.id] ? (
+                                                {order.payment ? (
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-green-600 font-semibold text-sm">✓ PAID</span>
-                                                        <span className="text-xs text-gray-500">({payments[order.id].method})</span>
+                                                        <span className="text-xs text-gray-500">({order.payment.method})</span>
                                                     </div>
                                                 ) : (
                                                     <button

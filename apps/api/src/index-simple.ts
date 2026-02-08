@@ -5,6 +5,12 @@ import cors from '@fastify/cors';
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const HOST = process.env.HOST || '0.0.0.0';
 
+const ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'https://ranrhar.com',
+    'https://www.ranrhar.com',
+];
+
 const fastify = Fastify({
     logger: {
         level: 'debug',
@@ -13,9 +19,15 @@ const fastify = Fastify({
 
 async function start() {
     try {
-        // Simple CORS
+        // CORS: Same whitelist as main API (security)
         await fastify.register(cors, {
-            origin: true,
+            origin: (origin, cb) => {
+                if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+                    cb(null, true);
+                } else {
+                    cb(new Error('Not allowed by CORS'), false);
+                }
+            },
             credentials: true,
         });
 

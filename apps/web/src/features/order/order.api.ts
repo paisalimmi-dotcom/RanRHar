@@ -26,13 +26,33 @@ interface GetOrdersResponse {
             email: string;
             role: string;
         };
+        payment?: { id: string; amount: number; method: string; status: string } | null;
     }>;
 }
 
 export const orderApi = {
     /**
-     * Create a new order via API
-     * Requires authentication (staff or cashier role)
+     * Create order as guest (customer flow) - no auth required
+     */
+    async createGuestOrder(items: OrderItem[], total: number, tableCode?: string): Promise<Order> {
+        const response = await apiClient.post<CreateOrderResponse & { tableCode?: string }>(
+            '/orders/guest',
+            { items, total, tableCode } as CreateOrderRequest & { tableCode?: string },
+            false // No auth
+        );
+        return {
+            id: response.id,
+            items: response.items,
+            subtotal: response.subtotal,
+            total: response.total,
+            status: response.status,
+            createdAt: response.createdAt,
+        };
+    },
+
+    /**
+     * Create a new order via API (staff/cashier)
+     * Requires authentication
      */
     async createOrder(items: OrderItem[], total: number): Promise<Order> {
         const response = await apiClient.post<CreateOrderResponse>(
@@ -62,7 +82,7 @@ export const orderApi = {
             true // Auth required
         );
 
-        // Transform API response to Order[] type
+        // Transform API response to Order[] type (payment included from JOIN)
         return response.orders.map(order => ({
             id: order.id,
             items: order.items,
@@ -70,6 +90,7 @@ export const orderApi = {
             total: order.total,
             status: order.status,
             createdAt: order.createdAt,
+            payment: order.payment ?? null,
         }));
     },
 

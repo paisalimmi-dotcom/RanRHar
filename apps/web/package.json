@@ -11,6 +11,7 @@
         "test:e2e:ui": "playwright test --ui"
     },
     "dependencies": {
+        "@sentry/nextjs": "^10.38.0",
         "next": "latest",
         "react": "latest",
         "react-dom": "latest",

@@ -94,6 +94,12 @@ psql -U postgres -d ranrhar -f apps/api/src/db/migration-001-add-order-status.sq
 
 # Migration 002: Add payments table
 psql -U postgres -d ranrhar -f apps/api/src/db/migration-002-add-payments.sql
+
+# Migration 003: Add inventory tables
+psql -U postgres -d ranrhar -f apps/api/src/db/migration-003-add-inventory.sql
+
+# Migration 004: Add guest user + fix password hashes
+psql -U postgres -d ranrhar -f apps/api/src/db/migration-004-add-guest-and-fix-passwords.sql
 ```
 
 ### 4. Verify Database Setup
@@ -102,7 +108,8 @@ psql -U postgres -d ranrhar -f apps/api/src/db/migration-002-add-payments.sql
 psql -U postgres -d ranrhar -c "\dt"
 ```
 
-Expected tables: `users`, `orders`, `payments`
+Expected tables: `users`, `orders`, `payments`, `inventory_items`, `stock_movements`, `restaurants`, `menu_categories`, `menu_items`.  
+Verify: `SELECT * FROM users WHERE email = 'guest@system';` and `SELECT COUNT(*) FROM menu_items;`
 
 ---
 
@@ -220,6 +227,15 @@ sudo systemctl start ranrhar-web
 - [ ] **NODE_ENV**: Set to `production` in all environments
 - [ ] **SSL/TLS**: Valid certificate configured on reverse proxy
 - [ ] **Firewall**: Only necessary ports open (80, 443, PostgreSQL port restricted)
+
+### Optional: Error Tracking (Sentry)
+
+Add to `apps/web/.env.local`:
+```env
+NEXT_PUBLIC_SENTRY_DSN=https://xxx@xxx.ingest.sentry.io/xxx
+SENTRY_ORG=your-org
+SENTRY_PROJECT=ranrhar
+```
 
 ### Post-Deployment
 

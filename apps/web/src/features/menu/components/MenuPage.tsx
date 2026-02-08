@@ -1,8 +1,11 @@
 'use client';
 
 import Image from 'next/image';
+import { useEffect } from 'react';
 import { CartProvider, useCart, CartSummary } from '../../cart';
 import type { MenuCategory, RestaurantInfo } from '../types';
+
+const TABLE_CODE_KEY = 'ranrhar_table_code';
 
 type MenuPageProps = {
     initialData: {
@@ -12,6 +15,12 @@ type MenuPageProps = {
 };
 
 function MenuContent({ data }: { data: MenuPageProps['initialData'] }) {
+    // Persist table code for checkout (guest order flow)
+    useEffect(() => {
+        if (data?.restaurant?.tableCode) {
+            sessionStorage.setItem(TABLE_CODE_KEY, data.restaurant.tableCode);
+        }
+    }, [data?.restaurant?.tableCode]);
     const { restaurant, categories } = data;
     const { addToCart } = useCart();
 

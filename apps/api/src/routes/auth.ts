@@ -2,21 +2,23 @@ import { FastifyInstance } from 'fastify';
 import bcrypt from 'bcryptjs';
 import { pool } from '../db';
 import { generateToken, authMiddleware } from '../middleware/auth';
+import { LoginBodySchema } from '../schemas';
 
 export async function authRoutes(fastify: FastifyInstance) {
     // POST /auth/login - Login with email and password
     // Security: Strict rate limiting to prevent brute force attacks
-    fastify.post<{
-        Body: { email: string; password: string };
-    }>('/auth/login', {
+    fastify.post('/auth/login', {
         config: {
             rateLimit: {
                 max: 5,
                 timeWindow: '15 minutes',
             },
         },
+        schema: {
+            body: LoginBodySchema,
+        },
     }, async (request, reply) => {
-        const { email, password } = request.body;
+        const { email, password } = request.body as { email: string; password: string };
 
         if (!email || !password) {
             return reply.status(400).send({ error: 'Email and password are required' });
@@ -34,6 +36,11 @@ export async function authRoutes(fastify: FastifyInstance) {
             }
 
             const user = result.rows[0];
+
+            // Guest user cannot log in (used for customer orders only)
+            if (user.role === 'guest') {
+                return reply.status(401).send({ error: 'Invalid credentials' });
+            }
 
             // Verify password
             const isValid = await bcrypt.compare(password, user.password_hash);

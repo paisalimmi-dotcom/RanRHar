@@ -157,6 +157,8 @@ psql -U postgres -d ranrhar -c "\d orders"
 # Run missing migrations in order
 psql -U postgres -d ranrhar -f apps/api/src/db/migration-001-add-order-status.sql
 psql -U postgres -d ranrhar -f apps/api/src/db/migration-002-add-payments.sql
+psql -U postgres -d ranrhar -f apps/api/src/db/migration-003-add-inventory.sql
+psql -U postgres -d ranrhar -f apps/api/src/db/migration-004-add-guest-and-fix-passwords.sql
 ```
 
 ### Verifying Migrations
@@ -291,12 +293,58 @@ psql -U postgres -d ranrhar -c "SELECT column_name FROM information_schema.colum
 
 ---
 
+### Migration 003: Add Inventory Tables
+
+**Date**: 2026-02-07
+
+**Feature**: Feature-09 - Inventory Management
+
+**File**: `apps/api/src/db/migration-003-add-inventory.sql`
+
+**Changes**: Created `inventory_items` and `stock_movements` tables.
+
+**Execute**: `psql -U postgres -d ranrhar -f apps/api/src/db/migration-003-add-inventory.sql`
+
+---
+
+### Migration 004: Add Guest User & Fix Passwords
+
+**Date**: 2026-02-08
+
+**Feature**: Customer Order Flow (Guest)
+
+**File**: `apps/api/src/db/migration-004-add-guest-and-fix-passwords.sql`
+
+**Changes**:
+- Added `guest` role to users CHECK constraint
+- Fixed bcrypt hashes for test users (password: password123)
+- Inserted `guest@system` user for customer-placed orders
+
+**Execute**: `psql -U postgres -d ranrhar -f apps/api/src/db/migration-004-add-guest-and-fix-passwords.sql`
+
+---
+
+### Migration 005: Add Menu Tables
+
+**Date**: 2026-02-08
+
+**Feature**: Menu from Database
+
+**File**: `apps/api/src/db/migration-005-add-menu.sql`
+
+**Changes**:
+- Created `restaurants`, `menu_categories`, `menu_items` tables
+- Seed data for default menu (9 items across 3 categories)
+
+**Execute**: `psql -U postgres -d ranrhar -f apps/api/src/db/migration-005-add-menu.sql`
+
+---
+
 ## Future Migrations (Planned)
 
 The following migrations are planned for upcoming features:
 
-- **Migration 003**: Add inventory table (Feature-09)
-- **Migration 004**: Add staff management tables
+- **Migration 006**: Add staff management tables
 - **Migration 005**: Add menu management tables
 - **Migration 006**: Add analytics/reporting tables
 

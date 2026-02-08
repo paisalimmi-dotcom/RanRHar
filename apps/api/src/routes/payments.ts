@@ -1,34 +1,19 @@
 import { FastifyInstance } from 'fastify';
 import { pool } from '../db';
 import { authMiddleware, requireRole } from '../middleware/auth';
-
-interface RecordPaymentRequest {
-    amount: number;
-    method: 'CASH' | 'QR';
-    notes?: string;
-}
+import { OrderIdParamSchema, RecordPaymentBodySchema } from '../schemas';
 
 export async function paymentRoutes(fastify: FastifyInstance) {
     // POST /orders/:id/payment - Record payment for an order
-    fastify.post<{
-        Params: {
-            id: string;
-        };
-        Body: RecordPaymentRequest;
-    }>('/orders/:id/payment', {
+    fastify.post('/orders/:id/payment', {
         preHandler: [authMiddleware, requireRole('staff', 'cashier')],
+        schema: {
+            params: OrderIdParamSchema,
+            body: RecordPaymentBodySchema,
+        },
     }, async (request, reply) => {
-        const { id: orderId } = request.params;
-        const { amount, method, notes } = request.body;
-
-        // Validate input
-        if (typeof amount !== 'number' || amount <= 0) {
-            return reply.status(400).send({ error: 'Valid amount is required' });
-        }
-
-        if (!method || !['CASH', 'QR'].includes(method)) {
-            return reply.status(400).send({ error: 'Payment method must be CASH or QR' });
-        }
+        const { id: orderId } = request.params as { id: string };
+        const { amount, method, notes } = request.body as { amount: number; method: 'CASH' | 'QR'; notes?: string };
 
         try {
             // Check if order exists and get total
@@ -87,14 +72,13 @@ export async function paymentRoutes(fastify: FastifyInstance) {
     });
 
     // GET /orders/:id/payment - Get payment details for an order
-    fastify.get<{
-        Params: {
-            id: string;
-        };
-    }>('/orders/:id/payment', {
+    fastify.get('/orders/:id/payment', {
         preHandler: [authMiddleware, requireRole('owner', 'staff', 'cashier')],
+        schema: {
+            params: OrderIdParamSchema,
+        },
     }, async (request, reply) => {
-        const { id: orderId } = request.params;
+        const { id: orderId } = request.params as { id: string };
 
         try {
             const result = await pool.query(

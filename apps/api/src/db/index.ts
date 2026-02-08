@@ -25,27 +25,38 @@ function getPool(): Pool {
         connectionTimeoutMillis: 3000,
     });
 
-    // Test connection and fallback
-    newPool.query('SELECT NOW()', (err, res) => {
-        if (err) {
-            console.warn('⚠️ Database connection failed, falling back to MOCK DB:', err.message);
-            globalThis.__db_pool = mockPool as unknown as Pool;
-        } else {
-            console.log('✅ Database connected:', res.rows[0].now);
-        }
-    });
-
     globalThis.__db_pool = newPool;
     return newPool;
 }
 
-export const pool = getPool();
+/** Proxy so prepareDatabase() can swap to mock and all consumers get current pool */
+export const pool = new Proxy({} as Pool, {
+    get(_, prop) {
+        return (getPool() as unknown as Record<string | symbol, unknown>)[prop];
+    },
+});
 
-// Graceful shutdown (only register once)
-if (!globalThis.__db_pool) {
-    process.on('SIGINT', async () => {
-        await pool.end();
-        console.log('Database pool closed');
-        process.exit(0);
-    });
+/** Verify DB connection before server starts; fallback to mock on failure */
+export async function prepareDatabase(): Promise<void> {
+    const p = getPool();
+    try {
+        const res = await p.query('SELECT 1');
+        if (res.rows.length > 0) {
+            console.log('✅ Database connected');
+        }
+    } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn('⚠️ Database connection failed, falling back to MOCK DB:', msg);
+        (globalThis as { __db_pool?: Pool }).__db_pool = mockPool as unknown as Pool;
+    }
 }
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+    const p = getPool();
+    if (p && typeof (p as Pool).end === 'function') {
+        await (p as Pool).end();
+    }
+    console.log('Database pool closed');
+    process.exit(0);
+});

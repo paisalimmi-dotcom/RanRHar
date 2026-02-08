@@ -8,7 +8,8 @@ import { authRoutes } from './routes/auth';
 import { orderRoutes } from './routes/orders';
 import { paymentRoutes } from './routes/payments';
 import { inventoryRoutes } from './routes/inventory';
-import './db'; // Initialize database connection
+import { menuRoutes } from './routes/menu';
+import { prepareDatabase, pool } from './db';
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const HOST = process.env.HOST || '0.0.0.0';
@@ -31,6 +32,9 @@ const fastify = Fastify({
 
 async function start() {
     try {
+        // Verify DB before accepting requests
+        await prepareDatabase();
+
         // Security: Helmet for security headers
         await fastify.register(helmet, {
             contentSecurityPolicy: {
@@ -116,14 +120,26 @@ async function start() {
             }
         });
 
-        // Register routes
-        await fastify.register(authRoutes);
-        await fastify.register(orderRoutes);
-        await fastify.register(paymentRoutes);
+        // Register routes under /v1 prefix (API versioning)
+        await fastify.register(authRoutes, { prefix: '/v1' });
+        await fastify.register(orderRoutes, { prefix: '/v1' });
+        await fastify.register(paymentRoutes, { prefix: '/v1' });
+        await fastify.register(inventoryRoutes, { prefix: '/v1' });
+        await fastify.register(menuRoutes, { prefix: '/v1' });
 
-        // Health check
+        // Health check (no version - used by load balancers)
         fastify.get('/health', async () => {
             return { status: 'ok', timestamp: new Date().toISOString() };
+        });
+
+        // Deep health check (DB connectivity)
+        fastify.get('/health/ready', async (_request, reply) => {
+            try {
+                await pool.query('SELECT 1');
+                return reply.send({ status: 'ready', database: 'connected' });
+            } catch {
+                return reply.status(503).send({ status: 'degraded', database: 'disconnected' });
+            }
         });
 
         // Start server

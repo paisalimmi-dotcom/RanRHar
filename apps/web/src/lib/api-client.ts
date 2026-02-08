@@ -1,7 +1,12 @@
 // API Client for RanRHar Backend
-// Centralized HTTP client with auth token injection
+// Centralized HTTP client with auth, timeout, and retry
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = `${API_BASE.replace(/\/$/, '')}/v1`;
+
+const DEFAULT_TIMEOUT_MS = 15000;
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 500;
 
 export class APIError extends Error {
     constructor(
@@ -19,13 +24,18 @@ interface RequestOptions {
     body?: unknown;
     headers?: Record<string, string>;
     requireAuth?: boolean;
+    timeout?: number;
+}
+
+function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function apiRequest<T>(
     endpoint: string,
     options: RequestOptions = {}
 ): Promise<T> {
-    const { method = 'GET', body, headers = {}, requireAuth = false } = options;
+    const { method = 'GET', body, headers = {}, timeout = DEFAULT_TIMEOUT_MS } = options;
 
     const url = `${API_BASE_URL}${endpoint}`;
 
@@ -33,9 +43,6 @@ async function apiRequest<T>(
         'Content-Type': 'application/json',
         ...headers,
     };
-
-    // Auth token is now handled via httpOnly cookies
-    // No need to inject Authorization header manually
 
     const config: RequestInit = {
         method,
@@ -47,29 +54,55 @@ async function apiRequest<T>(
         config.body = JSON.stringify(body);
     }
 
-    try {
-        const response = await fetch(url, config);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    config.signal = controller.signal;
 
-        // Handle non-JSON responses
-        const contentType = response.headers.get('content-type');
-        const isJson = contentType?.includes('application/json');
+    let lastError: unknown;
 
-        if (!response.ok) {
-            const errorData = isJson ? await response.json() : await response.text();
-            throw new APIError(
-                errorData?.error || `HTTP ${response.status}`,
-                response.status,
-                errorData
-            );
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            const response = await fetch(url, config);
+
+            const contentType = response.headers.get('content-type');
+            const isJson = contentType?.includes('application/json');
+
+            if (!response.ok) {
+                const errorData = isJson ? await response.json() : await response.text();
+                const err = new APIError(
+                    (typeof errorData === 'object' && errorData?.error) || `HTTP ${response.status}`,
+                    response.status,
+                    errorData
+                );
+                if (response.status >= 500 && attempt < MAX_RETRIES) {
+                    lastError = err;
+                    await sleep(RETRY_DELAY_MS * (attempt + 1));
+                    continue;
+                }
+                throw err;
+            }
+
+            clearTimeout(timeoutId);
+            return isJson ? await response.json() : ({} as T);
+        } catch (error) {
+            clearTimeout(timeoutId);
+            if (error instanceof APIError) throw error;
+
+            const isRetryable =
+                (error instanceof Error && (error.name === 'AbortError' || error.message.includes('fetch'))) ||
+                (attempt < MAX_RETRIES);
+
+            if (isRetryable) {
+                lastError = error;
+                await sleep(RETRY_DELAY_MS * (attempt + 1));
+                continue;
+            }
+
+            throw new APIError('Network error', 0, lastError ?? error);
         }
-
-        return isJson ? await response.json() : ({} as T);
-    } catch (error) {
-        if (error instanceof APIError) {
-            throw error;
-        }
-        throw new APIError('Network error', 0, error);
     }
+
+    throw new APIError('Network error', 0, lastError);
 }
 
 export const apiClient = {

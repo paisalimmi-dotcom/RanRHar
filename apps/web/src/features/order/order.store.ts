@@ -32,7 +32,9 @@ function cacheOrders(orders: Order[]): void {
     }
 }
 
-// Create a new order via API
+const TABLE_CODE_KEY = 'ranrhar_table_code';
+
+// Create a new order via API (uses guest endpoint for customer flow)
 export async function createOrder(cartItems: CartItem[]): Promise<Order> {
     const subtotal = cartItems.reduce((sum, item) => sum + (item.priceTHB * item.quantity), 0);
 
@@ -44,9 +46,11 @@ export async function createOrder(cartItems: CartItem[]): Promise<Order> {
         quantity: item.quantity,
     }));
 
+    const tableCode = typeof window !== 'undefined' ? sessionStorage.getItem(TABLE_CODE_KEY) : null;
+
     try {
-        // Create order via API
-        const order = await orderApi.createOrder(orderItems, subtotal);
+        // Customer flow: use guest endpoint (no login required)
+        const order = await orderApi.createGuestOrder(orderItems, subtotal, tableCode || undefined);
 
         // Update local cache
         const cached = getCachedOrders();

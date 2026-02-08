@@ -42,9 +42,9 @@ CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
 
 -- Seed data for testing
 -- Password for all users: password123
--- Hash generated with bcryptjs, rounds=10
+-- Hash generated with bcryptjs, rounds=10 (run: node seed-passwords.js)
 INSERT INTO users (email, password_hash, role) VALUES
-    ('owner@test.com', '$2a$10$rZ5qH8qVqJ5qH8qVqJ5qHOqH8qVqJ5qH8qVqJ5qH8qVqJ5qH8qVqJ', 'owner'),
-    ('staff@test.com', '$2a$10$rZ5qH8qVqJ5qH8qVqJ5qHOqH8qVqJ5qH8qVqJ5qH8qVqJ5qH8qVqJ', 'staff'),
-    ('cashier@test.com', '$2a$10$rZ5qH8qVqJ5qH8qVqJ5qHOqH8qVqJ5qH8qVqJ5qH8qVqJ5qH8qVqJ', 'cashier')
+    ('owner@test.com', '$2a$10$SJexab18MV21UVdfePJQ5.IrHsArLxcOTFJ.IRaFb6MzdlMAWrs8u', 'owner'),
+    ('staff@test.com', '$2a$10$SJexab18MV21UVdfePJQ5.IrHsArLxcOTFJ.IRaFb6MzdlMAWrs8u', 'staff'),
+    ('cashier@test.com', '$2a$10$SJexab18MV21UVdfePJQ5.IrHsArLxcOTFJ.IRaFb6MzdlMAWrs8u', 'cashier')
 ON CONFLICT (email) DO NOTHING;

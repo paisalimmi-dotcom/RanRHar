@@ -10,6 +10,13 @@ export type OrderItem = {
 
 export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'COMPLETED';
 
+export type OrderPaymentSummary = {
+    id: string;
+    amount: number;
+    method: string;
+    status: string;
+};
+
 export type Order = {
     id: string;
     items: OrderItem[];
@@ -17,4 +24,5 @@ export type Order = {
     total: number;
     status: OrderStatus;
     createdAt: string; // ISO timestamp
+    payment?: OrderPaymentSummary | null;
 };
