@@ -542,9 +542,13 @@ The project is designed for AI multi-agent development using a strict architectu
 - **Guest Order**: ลูกค้าสั่งอาหารได้โดยไม่ต้อง login (POST /orders/guest)
 - **เอกสาร**: PROJECT_ADJUSTMENT_PLAN, DEVELOPER_SPEC (Tech Stack Freemium), ROLE_UI_ACCESS_SECURITY, STAKEHOLDER_REQUIREMENTS, OLYMPIC_STANDARD
 
+### ✅ KDS + สรุปโต๊ะ (2026-02-08)
+- **KDS** (`/staff/kds`) — หน้าจอครัว 3 คอลัมน์ (รอทำ/กำลังทำ/เสร็จแล้ว), อัปเดตทุก 30 วินาที
+- **สรุปโต๊ะ** (`/staff/tables`) — หน้าพนักงานเสิร์ฟ แสดงออเดอร์รออาหารและเสร็จแล้ว
+- Staff page เพิ่มลิงก์ KDS และ สรุปโต๊ะ
+
 ### Next Planned Phase
 🚧 **Phase 10 Part 2** — Optimization
 - [ ] Performance Profiling (Render cycles, Bundle size)
 - [ ] WebSocket Integration design (Real-time updates)
-- [ ] KDS (/staff/kds)
 - [ ] Menu Management UI

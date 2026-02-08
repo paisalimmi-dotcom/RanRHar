@@ -152,7 +152,7 @@ ALTER TABLE menu_items ADD COLUMN name_en VARCHAR(255);
 
 | ฟีเจอร์ | มี | ไม่มี |
 |---------|-----|-------|
-| KDS (/staff/kds) | | ❌ |
+| KDS (/staff/kds) | ✅ | |
 | สถานะออเดอร์ละเอียด (NEW/COOKING/READY) | | ❌ (มีแค่ PENDING/CONFIRMED/COMPLETED) |
 | คำขอพิเศษ | | ❌ |
 | กลุ่มตามโต๊ะ | | ❌ |

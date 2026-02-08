@@ -216,8 +216,8 @@
 | บทบาท | เปิดแอปเห็น | เข้าถึงได้ | ความปลอดภัย |
 |-------|--------------|------------|--------------|
 | **ลูกค้า** | เมนู → ตระกร้า → Checkout → Success | เมนู, สั่งอาหาร (guest) | ไม่ต้อง login, API validate ราคา |
-| **Cashier** | เหมือนลูกค้า + /staff | Login → checkout, orders, บันทึกการชำระ | RBAC server-side |
-| **Staff** | เหมือนลูกค้า + /staff | Login → orders, inventory, checkout | RBAC server-side |
+| **Cashier** | เหมือนลูกค้า + /staff | Login → checkout, orders, staff/tables, บันทึกการชำระ | RBAC server-side |
+| **Staff** | เหมือนลูกค้า + /staff | Login → KDS, orders, inventory, staff/tables, checkout | RBAC server-side |
 | **Owner** | เหมือน staff | + /admin | RBAC server-side |
 
 ---
