@@ -1,5 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { pool } from '../db';
+import { auditLog } from '../lib/audit';
+import { incrementPayments } from '../lib/metrics';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { OrderIdParamSchema, RecordPaymentBodySchema } from '../schemas';
 
@@ -54,6 +56,8 @@ export async function paymentRoutes(fastify: FastifyInstance) {
             );
 
             const payment = paymentResult.rows[0];
+            await auditLog({ action: 'payment.create', entityType: 'payment', entityId: payment.id.toString(), actorId: request.user!.userId, actorEmail: request.user!.email, metadata: { orderId, amount, method } });
+            incrementPayments();
 
             return reply.status(201).send({
                 id: payment.id.toString(),
@@ -66,7 +70,7 @@ export async function paymentRoutes(fastify: FastifyInstance) {
                 notes: payment.notes,
             });
         } catch (error) {
-            console.error('Record payment error:', error);
+            request.log.error({ err: error }, 'Record payment error');
             return reply.status(500).send({ error: 'Internal server error' });
         }
     });
@@ -111,7 +115,7 @@ export async function paymentRoutes(fastify: FastifyInstance) {
                 notes: payment.notes,
             });
         } catch (error) {
-            console.error('Get payment error:', error);
+            request.log.error({ err: error }, 'Get payment error');
             return reply.status(500).send({ error: 'Internal server error' });
         }
     });

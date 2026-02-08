@@ -15,7 +15,8 @@ function CheckoutContent() {
     // Redirect if cart is empty, but wait until initialized
     useEffect(() => {
         if (isInitialized && totalItems === 0) {
-            router.push('/menu/A12');
+            const tableCode = typeof window !== 'undefined' ? sessionStorage.getItem('ranrhar_table_code') : null;
+            router.push(tableCode ? `/menu/${tableCode}` : '/menu/A12');
         }
     }, [totalItems, router, isInitialized]);
 
@@ -145,7 +146,10 @@ function CheckoutContent() {
                 {/* Back Link */}
                 <div style={{ textAlign: 'center', marginTop: '16px' }}>
                     <button
-                        onClick={() => router.push('/menu/A12')}
+                        onClick={() => {
+                            const tableCode = typeof window !== 'undefined' ? sessionStorage.getItem('ranrhar_table_code') : null;
+                            router.push(tableCode ? `/menu/${tableCode}` : '/menu/A12');
+                        }}
                         style={{
                             background: 'none',
                             border: 'none',

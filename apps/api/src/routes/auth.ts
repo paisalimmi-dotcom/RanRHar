@@ -1,6 +1,8 @@
 import { FastifyInstance } from 'fastify';
 import bcrypt from 'bcryptjs';
 import { pool } from '../db';
+import { auditLog } from '../lib/audit';
+import { incrementLogins, incrementFailedLogins } from '../lib/metrics';
 import { generateToken, authMiddleware } from '../middleware/auth';
 import { LoginBodySchema } from '../schemas';
 
@@ -32,6 +34,8 @@ export async function authRoutes(fastify: FastifyInstance) {
             );
 
             if (result.rows.length === 0) {
+                await auditLog({ action: 'auth.failed_login', entityType: 'user', actorEmail: email, metadata: { reason: 'user_not_found' }, ip: request.ip });
+                incrementFailedLogins();
                 return reply.status(401).send({ error: 'Invalid credentials' });
             }
 
@@ -39,6 +43,8 @@ export async function authRoutes(fastify: FastifyInstance) {
 
             // Guest user cannot log in (used for customer orders only)
             if (user.role === 'guest') {
+                await auditLog({ action: 'auth.failed_login', entityType: 'user', actorEmail: email, metadata: { reason: 'guest_role' }, ip: request.ip });
+                incrementFailedLogins();
                 return reply.status(401).send({ error: 'Invalid credentials' });
             }
 
@@ -46,8 +52,13 @@ export async function authRoutes(fastify: FastifyInstance) {
             const isValid = await bcrypt.compare(password, user.password_hash);
 
             if (!isValid) {
+                await auditLog({ action: 'auth.failed_login', entityType: 'user', actorEmail: email, metadata: { reason: 'invalid_password' }, ip: request.ip });
+                incrementFailedLogins();
                 return reply.status(401).send({ error: 'Invalid credentials' });
             }
+
+            await auditLog({ action: 'auth.login', entityType: 'user', entityId: String(user.id), actorId: user.id, actorEmail: user.email, ip: request.ip });
+            incrementLogins();
 
             // Generate JWT token
             const token = generateToken({
@@ -73,7 +84,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                 },
             });
         } catch (error) {
-            console.error('Login error:', error);
+            request.log.error({ err: error }, 'Login error');
             return reply.status(500).send({ error: 'Internal server error' });
         }
     });

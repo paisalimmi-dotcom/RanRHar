@@ -58,7 +58,7 @@ export async function menuRoutes(fastify: FastifyInstance) {
                 categories: categoriesWithItems,
             });
         } catch (error) {
-            console.error('Get menu error:', error);
+            request.log.error({ err: error }, 'Get menu error');
             return reply.status(500).send({ error: 'Internal server error' });
         }
     });

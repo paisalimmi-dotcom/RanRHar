@@ -31,6 +31,8 @@ function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+const MUTATING_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
+
 async function apiRequest<T>(
     endpoint: string,
     options: RequestOptions = {}
@@ -58,9 +60,11 @@ async function apiRequest<T>(
     const timeoutId = setTimeout(() => controller.abort(), timeout);
     config.signal = controller.signal;
 
+    const isMutating = MUTATING_METHODS.includes(method);
+    const maxAttempts = isMutating ? 0 : MAX_RETRIES;
     let lastError: unknown;
 
-    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    for (let attempt = 0; attempt <= maxAttempts; attempt++) {
         try {
             const response = await fetch(url, config);
 
@@ -74,7 +78,7 @@ async function apiRequest<T>(
                     response.status,
                     errorData
                 );
-                if (response.status >= 500 && attempt < MAX_RETRIES) {
+                if (!isMutating && response.status >= 500 && attempt < maxAttempts) {
                     lastError = err;
                     await sleep(RETRY_DELAY_MS * (attempt + 1));
                     continue;
@@ -89,8 +93,9 @@ async function apiRequest<T>(
             if (error instanceof APIError) throw error;
 
             const isRetryable =
-                (error instanceof Error && (error.name === 'AbortError' || error.message.includes('fetch'))) ||
-                (attempt < MAX_RETRIES);
+                !isMutating &&
+                (error instanceof Error && (error.name === 'AbortError' || error.message.includes('fetch'))) &&
+                attempt < maxAttempts;
 
             if (isRetryable) {
                 lastError = error;

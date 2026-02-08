@@ -1,9 +1,13 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET =
+    process.env.JWT_SECRET ||
+    (process.env.NODE_ENV !== 'production'
+        ? 'dev-secret-at-least-32-characters-long'
+        : undefined);
 
-// Security: Enforce strong JWT secret
+// Security: Enforce strong JWT secret in production
 if (!JWT_SECRET) {
     throw new Error('FATAL: JWT_SECRET environment variable is required');
 }

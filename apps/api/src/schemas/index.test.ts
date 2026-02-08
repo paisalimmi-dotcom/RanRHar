@@ -50,6 +50,20 @@ describe('API Schemas', () => {
                 total: 0,
             })).toBe(false);
         });
+
+        it('rejects quantity > 99', () => {
+            expect(compile.Check({
+                items: [{ id: 'm-1', name: 'Pad Thai', priceTHB: 99, quantity: 100 }],
+                total: 9900,
+            })).toBe(false);
+        });
+
+        it('rejects name > 255 chars', () => {
+            expect(compile.Check({
+                items: [{ id: 'm-1', name: 'x'.repeat(256), priceTHB: 99, quantity: 1 }],
+                total: 99,
+            })).toBe(false);
+        });
     });
 
     describe('CreateGuestOrderBodySchema', () => {

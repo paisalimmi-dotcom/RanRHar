@@ -34,7 +34,7 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
 
             return reply.send({ items: result.rows });
         } catch (error) {
-            console.error('Get inventory error:', error);
+            request.log.error({ err: error }, 'Get inventory error');
             return reply.status(500).send({ error: 'Internal server error' });
         }
     });
@@ -77,7 +77,7 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
             return reply.status(201).send(newItem);
         } catch (error) {
             await client.query('ROLLBACK');
-            console.error('Create inventory item error:', error);
+            request.log.error({ err: error }, 'Create inventory item error');
             return reply.status(500).send({ error: 'Internal server error' });
         } finally {
             client.release();
@@ -163,7 +163,7 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
             return reply.send(finalResult.rows[0]);
         } catch (error) {
             await client.query('ROLLBACK');
-            console.error('Update inventory error:', error);
+            request.log.error({ err: error }, 'Update inventory error');
             const errorMessage = error instanceof Error ? error.message : '';
             if (errorMessage === 'Item not found') return reply.status(404).send({ error: 'Item not found' });
             if (errorMessage === 'Invalid adjustment data') return reply.status(400).send({ error: errorMessage });
@@ -194,7 +194,7 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
 
             return reply.send({ movements: result.rows });
         } catch (error) {
-            console.error('Get movements error:', error);
+            request.log.error({ err: error }, 'Get movements error');
             return reply.status(500).send({ error: 'Internal server error' });
         }
     });

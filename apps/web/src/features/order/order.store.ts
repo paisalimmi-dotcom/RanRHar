@@ -15,8 +15,7 @@ function getCachedOrders(): Order[] {
     try {
         const data = localStorage.getItem(CACHE_KEY);
         return data ? JSON.parse(data) : [];
-    } catch (error) {
-        console.error('Failed to read cached orders:', error);
+    } catch {
         return [];
     }
 }
@@ -27,8 +26,8 @@ function cacheOrders(orders: Order[]): void {
 
     try {
         localStorage.setItem(CACHE_KEY, JSON.stringify(orders));
-    } catch (error) {
-        console.error('Failed to cache orders:', error);
+    } catch {
+        // Ignore cache write failures
     }
 }
 
@@ -59,7 +58,6 @@ export async function createOrder(cartItems: CartItem[]): Promise<Order> {
 
         return order;
     } catch (error) {
-        console.error('Failed to create order:', error);
         throw error;
     }
 }
@@ -79,10 +77,7 @@ export async function getAllOrders(): Promise<Order[]> {
         cacheOrders(orders);
 
         return orders;
-    } catch (error) {
-        console.error('Failed to fetch orders:', error);
-
-        // Fallback to cached orders if API fails
+    } catch {
         return getCachedOrders();
     }
 }

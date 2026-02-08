@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Role } from './auth.types'
 import { authStore } from './auth.store'
@@ -12,26 +12,44 @@ type AuthGuardProps = {
 
 export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
     const router = useRouter()
+    const [validated, setValidated] = useState<boolean | null>(null)
 
-    // Compute authorization synchronously from session + allowedRoles
     const session = authStore.getSession()
-    const isAuthorized = session && allowedRoles.includes(session.role)
+    const sessionEmail = session?.email ?? ''
+    const rolesKey = allowedRoles.join(',')
 
-    // useEffect only for navigation side-effects (redirects)
     useEffect(() => {
-        if (!session) {
-            router.push('/login')
-            return
+        let cancelled = false
+
+        async function validate() {
+            const currentSession = authStore.getSession()
+            if (!currentSession) {
+                router.push('/login')
+                return
+            }
+            if (!allowedRoles.includes(currentSession.role)) {
+                router.push('/unauthorized')
+                return
+            }
+            const ok = await authStore.validateSession()
+            if (cancelled) return
+            setValidated(ok)
+            if (!ok) {
+                router.push('/login')
+            }
         }
 
-        if (!allowedRoles.includes(session.role)) {
-            router.push('/unauthorized')
-            return
-        }
-    }, [router, allowedRoles, session])
+        validate()
+        return () => { cancelled = true }
+    }, [router, sessionEmail, rolesKey])
 
-    // Render children only when authorized
-    if (!isAuthorized) {
+    const isAuthorized = session && allowedRoles.includes(session.role) && validated === true
+
+    if (!session || !allowedRoles.includes(session.role)) {
+        return null
+    }
+
+    if (validated === false || validated === null) {
         return null
     }
 

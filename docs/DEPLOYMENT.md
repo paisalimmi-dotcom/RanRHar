@@ -100,6 +100,20 @@ psql -U postgres -d ranrhar -f apps/api/src/db/migration-003-add-inventory.sql
 
 # Migration 004: Add guest user + fix password hashes
 psql -U postgres -d ranrhar -f apps/api/src/db/migration-004-add-guest-and-fix-passwords.sql
+
+# Migration 005: Add menu tables
+psql -U postgres -d ranrhar -f apps/api/src/db/migration-005-add-menu.sql
+
+# Migration 006: Add idempotency keys for orders
+psql -U postgres -d ranrhar -f apps/api/src/db/migration-006-add-idempotency.sql
+
+# Migration 007: Add audit log
+psql -U postgres -d ranrhar -f apps/api/src/db/migration-007-add-audit-log.sql
+```
+
+**Alternative (no psql required):** Run migrations via Node:
+```bash
+DATABASE_URL=postgresql://user:pass@localhost:5432/ranrhar pnpm migrate
 ```
 
 ### 4. Verify Database Setup

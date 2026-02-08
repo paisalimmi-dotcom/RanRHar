@@ -33,18 +33,71 @@ jobs:
       - name: Run unit tests
         run: pnpm test
 
+      - name: Coverage report
+        run: pnpm test:coverage
+
+      - name: Security audit
+        run: pnpm audit --audit-level=critical
+
       - name: Build
         run: pnpm build
 
-  # Optional: E2E tests (requires API + Web running - skip for now or use separately)
-  # e2e:
-  #   runs-on: ubuntu-latest
-  #   needs: build-and-test
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: pnpm/action-setup@v4
-  #     - uses: actions/setup-node@v4
-  #     - run: pnpm install --frozen-lockfile
-  #     - run: pnpm exec playwright install --with-deps
-  #     - run: pnpm exec playwright test
-  #   # Would need: start API + Web, run migrations, then test
+  e2e:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ranrhar_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Run database migrations
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d ranrhar_test -f apps/api/src/db/schema.sql
+          psql -h localhost -U postgres -d ranrhar_test -f apps/api/src/db/migration-001-add-order-status.sql
+          psql -h localhost -U postgres -d ranrhar_test -f apps/api/src/db/migration-002-add-payments.sql
+          psql -h localhost -U postgres -d ranrhar_test -f apps/api/src/db/migration-003-add-inventory.sql
+          psql -h localhost -U postgres -d ranrhar_test -f apps/api/src/db/migration-004-add-guest-and-fix-passwords.sql
+          psql -h localhost -U postgres -d ranrhar_test -f apps/api/src/db/migration-005-add-menu.sql
+          psql -h localhost -U postgres -d ranrhar_test -f apps/api/src/db/migration-006-add-idempotency.sql
+          psql -h localhost -U postgres -d ranrhar_test -f apps/api/src/db/migration-007-add-audit-log.sql
+
+      - name: Install Playwright browsers
+        run: cd apps/web && pnpm exec playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ranrhar_test
+          PORT: '3001'
+        run: cd apps/web && pnpm exec playwright test

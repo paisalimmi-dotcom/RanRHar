@@ -1,9 +1,13 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
+import { resolve } from 'path';
+config({ path: resolve(__dirname, '../.env') });
+config(); // fallback to process.cwd() .env
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import cookie from '@fastify/cookie';
+import { getMetrics, incrementRequests } from './lib/metrics';
 import { authRoutes } from './routes/auth';
 import { orderRoutes } from './routes/orders';
 import { paymentRoutes } from './routes/payments';
@@ -25,9 +29,19 @@ const ALLOWED_ORIGINS = [
 const fastify = Fastify({
     logger: {
         level: IS_PRODUCTION ? 'info' : 'debug',
+        serializers: {
+            req: (req) => ({ method: req.method, url: req.url }),
+            err: (err: Error) => ({
+                type: err.name,
+                message: err.message,
+                stack: err.stack ?? '',
+            }),
+        },
     },
     bodyLimit: 1048576, // 1MB limit to prevent DoS
     requestTimeout: 30000, // 30 seconds
+    requestIdHeader: 'x-request-id',
+    requestIdLogLabel: 'requestId',
 });
 
 async function start() {
@@ -53,8 +67,11 @@ async function start() {
         // Security: Strict CORS configuration
         await fastify.register(cors, {
             origin: (origin, cb) => {
-                // Allow requests with no origin (e.g., mobile apps, Postman)
                 if (!origin) {
+                    if (IS_PRODUCTION) {
+                        cb(new Error('No origin in production'), false);
+                        return;
+                    }
                     cb(null, true);
                     return;
                 }
@@ -77,10 +94,8 @@ async function start() {
 
         // Security: Cookie support for httpOnly auth tokens
         await fastify.register(cookie, {
-            secret: process.env.JWT_SECRET, // Use same strong secret for signing cookies
-            hook: 'onRequest',
-            parseOptions: {}
-        });
+            secret: process.env.JWT_SECRET,
+        } as { secret?: string });
 
         // Security: HTTPS enforcement in production
         if (IS_PRODUCTION) {
@@ -127,9 +142,19 @@ async function start() {
         await fastify.register(inventoryRoutes, { prefix: '/v1' });
         await fastify.register(menuRoutes, { prefix: '/v1' });
 
+        // Request counter for metrics
+        fastify.addHook('onRequest', async () => {
+            incrementRequests();
+        });
+
         // Health check (no version - used by load balancers)
         fastify.get('/health', async () => {
             return { status: 'ok', timestamp: new Date().toISOString() };
+        });
+
+        // Metrics endpoint (Prometheus-style JSON)
+        fastify.get('/metrics', async () => {
+            return getMetrics();
         });
 
         // Deep health check (DB connectivity)

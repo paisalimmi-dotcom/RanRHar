@@ -19,14 +19,17 @@ const fastify = Fastify({
 
 async function start() {
     try {
-        // CORS: Same whitelist as main API (security)
+        // CORS: Same whitelist as main API (reject null in production)
+        const isProd = process.env.NODE_ENV === 'production';
         await fastify.register(cors, {
             origin: (origin, cb) => {
-                if (!origin || ALLOWED_ORIGINS.includes(origin)) {
-                    cb(null, true);
-                } else {
-                    cb(new Error('Not allowed by CORS'), false);
+                if (!origin) {
+                    if (isProd) cb(new Error('No origin in production'), false);
+                    else cb(null, true);
+                    return;
                 }
+                if (ALLOWED_ORIGINS.includes(origin)) cb(null, true);
+                else cb(new Error('Not allowed by CORS'), false);
             },
             credentials: true,
         });

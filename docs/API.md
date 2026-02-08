@@ -1,5 +1,7 @@
 # API Documentation
 
+**OpenAPI Spec:** [openapi.yaml](openapi.yaml)
+
 ## Overview
 
 RanRHar REST API provides endpoints for authentication, order management, and payment processing. All endpoints use JSON for request and response bodies.

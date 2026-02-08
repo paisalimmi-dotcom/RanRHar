@@ -3,10 +3,6 @@ import { mockPool } from './mock';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
-if (!DATABASE_URL) {
-    throw new Error('DATABASE_URL environment variable is required');
-}
-
 // Declare global type for TypeScript
 declare global {
     var __db_pool: Pool | undefined;
@@ -15,6 +11,12 @@ declare global {
 // Singleton Pattern: Reuse existing pool across hot-reloads
 function getPool(): Pool {
     if (globalThis.__db_pool) {
+        return globalThis.__db_pool;
+    }
+
+    if (!DATABASE_URL) {
+        console.warn('DATABASE_URL not set, using MOCK DB');
+        globalThis.__db_pool = mockPool as unknown as Pool;
         return globalThis.__db_pool;
     }
 
