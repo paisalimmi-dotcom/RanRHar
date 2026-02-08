@@ -1,21 +1,23 @@
 # RanRHar
 Free & Freemium Restaurant Operating System
 
-## 🎯 Project Status: **80% Complete** (8/10 Features) | **คะแนน 9.5/10**
+## 🎯 Project Status: **90% Complete** (9/10 Features) | **คะแนน 9.5/10**
 
 ### ✅ Completed Features
 - **Feature-01**: Menu Browsing (`/menu/[tableCode]`)
 - **Feature-02**: Customer Cart (React Context + localStorage)
 - **Feature-03**: Image-Based Menu UI (Responsive cards)
-- **Feature-04**: Checkout & Order Flow (Full sales loop)
-- **Feature-05**: Authentication & RBAC (JWT + 3 roles)
+- **Feature-04**: Checkout & Order Flow (Full sales loop, Guest Order)
+- **Feature-05**: Authentication & RBAC (JWT + httpOnly cookie, 3 roles)
 - **Feature-06**: Backend API (Fastify + PostgreSQL + JWT)
 - **Feature-07**: Order Status Management (PENDING/CONFIRMED/COMPLETED)
-- **Feature-08**: Payment Integration (CASH/QR with orders page) ✨ **NEW**
+- **Feature-08**: Payment Integration (CASH/QR with orders page)
+- **Feature-09**: Inventory Management
+- **Feature-10 (Part 1)**: E2E Testing, Project Adjustment, Cashier /orders access
 
 ### 🚧 Planned
-- **Feature-09**: Inventory Management
-- **Feature-10**: Multi-branch Support
+- **Feature-10 Part 2**: KDS, Menu Management, Performance
+- **Multi-branch**: อนาคต
 
 ### 🔒 Security: **9.5/10** (World-Class)
 - ✅ Helmet (CSP, HSTS)
@@ -52,14 +54,17 @@ pnpm test:coverage
 ```
 
 ### 📖 Documentation
-- [ASSESSMENT.md](docs/ASSESSMENT.md) — คะแนน 9.5/10 ทุกมิติ
-- [STATUS.md](docs/STATUS.md) — Detailed project status
-- [ARCHITECTURE.md](docs/ARCHITECTURE.md) — System architecture
+- [DEVELOPER_SPEC.md](docs/DEVELOPER_SPEC.md) — Spec สำหรับนักพัฒนา
+- [PROJECT_ADJUSTMENT_PLAN.md](docs/PROJECT_ADJUSTMENT_PLAN.md) — แผนการปรับ Project
+- [ROLE_UI_ACCESS_SECURITY.md](docs/ROLE_UI_ACCESS_SECURITY.md) — หน้าจอแต่ละบทบาท, สิทธิ์, ความปลอดภัย
+- [STAKEHOLDER_REQUIREMENTS.md](docs/STAKEHOLDER_REQUIREMENTS.md) — ความต้องการ 5 บทบาท + Quality Loop
+- [ASSESSMENT.md](docs/ASSESSMENT.md) — คะแนน 9.5/10
+- [STATUS.md](docs/STATUS.md) — Project status
 - [ROUTES.md](docs/ROUTES.md) — Frontend routes
 - [API.md](docs/API.md) — API documentation
 
 ---
 
-**Last Updated**: 2026-02-07
-**Phase**: 10 (E2E Testing & Performance)
-**Next**: Performance Profiling, WebSocket Integration
+**Last Updated**: 2026-02-08
+**Phase**: 10 (Project Adjustment Complete)
+**Next**: KDS, Menu Management, Performance

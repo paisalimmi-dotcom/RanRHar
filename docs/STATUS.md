@@ -8,7 +8,7 @@ The project is designed for AI multi-agent development using a strict architectu
 ---
 
 ## Current Phase
-**Phase 8: Feature Completion & Testing (In Progress)**
+**Phase 10: E2E & Project Adjustment (Stabilization Complete)**
 
 ---
 
@@ -535,8 +535,16 @@ The project is designed for AI multi-agent development using a strict architectu
 ✅ E2E Testing Framework
 ✅ Secure Cookie Authentication
 
+### ✅ Project Adjustment (2026-02-08)
+- **Homepage**: `/` redirect → `/menu/A12` — ลูกค้าเห็นเมนูทันที
+- **Staff Portal**: `/staff` — ลิงก์สำหรับเจ้าหน้าที่
+- **Cashier Access**: เข้า `/orders` ได้ — ดูรายการและบันทึกการชำระ
+- **Guest Order**: ลูกค้าสั่งอาหารได้โดยไม่ต้อง login (POST /orders/guest)
+- **เอกสาร**: PROJECT_ADJUSTMENT_PLAN, DEVELOPER_SPEC (Tech Stack Freemium), ROLE_UI_ACCESS_SECURITY, STAKEHOLDER_REQUIREMENTS, OLYMPIC_STANDARD
+
 ### Next Planned Phase
-🚧 **Phase 10: E2E Testing & Performance** (Part 2 - Optimization)
+🚧 **Phase 10 Part 2** — Optimization
 - [ ] Performance Profiling (Render cycles, Bundle size)
 - [ ] WebSocket Integration design (Real-time updates)
-- [ ] CI Pipeline integration design
+- [ ] KDS (/staff/kds)
+- [ ] Menu Management UI

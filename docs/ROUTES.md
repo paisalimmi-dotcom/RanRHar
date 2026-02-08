@@ -12,11 +12,21 @@ RanRHar uses Next.js App Router for client-side routing. Routes are organized by
 
 ### GET /
 
-Home page (landing page).
+Home page — redirect ทันทีไป `/menu/A12` (ลูกค้าเห็นเมนูทันที). เจ้าหน้าที่เข้า `/staff` เพื่อ login หรือจัดการ
+
+**Access**: Public (redirect to /menu/A12)
+
+**File**: `apps/web/src/app/page.tsx`
+
+---
+
+### GET /staff
+
+Staff portal — ลิงก์สำหรับเจ้าหน้าที่เข้าสู่ระบบ, ดูออเดอร์, จัดการสต็อก
 
 **Access**: Public (no authentication required)
 
-**File**: `apps/web/src/app/page.tsx`
+**File**: `apps/web/src/app/staff/page.tsx`
 
 ---
 
@@ -197,13 +207,15 @@ Routes are protected using the `AuthGuard` component which:
 
 | Route | Public | cashier | staff | owner |
 |-------|--------|---------|-------|-------|
-| `/` | ✓ | ✓ | ✓ | ✓ |
+| `/` | ✓ (redirect) | ✓ | ✓ | ✓ |
 | `/menu/[tableCode]` | ✓ | ✓ | ✓ | ✓ |
+| `/staff` | ✓ | ✓ | ✓ | ✓ |
 | `/login` | ✓ | ✓ | ✓ | ✓ |
 | `/unauthorized` | ✓ | ✓ | ✓ | ✓ |
-| `/checkout` | - | ✓ | ✓ | ✓ |
+| `/checkout` | ✓ | ✓ | ✓ | ✓ |
 | `/order/success/[id]` | ✓ | ✓ | ✓ | ✓ |
-| `/orders` | - | - | ✓ | ✓ |
+| `/orders` | - | ✓ | ✓ | ✓ |
+| `/inventory` | - | - | ✓ | ✓ |
 | `/admin` | - | - | - | ✓ |
 
 ---

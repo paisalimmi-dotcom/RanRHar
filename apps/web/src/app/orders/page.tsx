@@ -90,7 +90,7 @@ export default function OrdersPage() {
     }
 
     return (
-        <AuthGuard allowedRoles={['owner', 'staff']}>
+        <AuthGuard allowedRoles={['owner', 'staff', 'cashier']}>
             <div className="min-h-screen bg-gray-50 p-8">
                 <div className="max-w-6xl mx-auto">
                     <div className="flex justify-between items-center mb-6">

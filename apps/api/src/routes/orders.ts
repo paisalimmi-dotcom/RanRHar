@@ -218,9 +218,9 @@ export async function orderRoutes(fastify: FastifyInstance) {
         }
     });
 
-    // GET /orders - List all orders with payment status (owner, staff)
+    // GET /orders - List all orders with payment status (owner, staff, cashier)
     fastify.get('/orders', {
-        preHandler: [authMiddleware, requireRole('owner', 'staff')],
+        preHandler: [authMiddleware, requireRole('owner', 'staff', 'cashier')],
     }, async (request, reply) => {
         try {
             const result = await pool.query(

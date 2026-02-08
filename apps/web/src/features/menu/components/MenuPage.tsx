@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect } from 'react';
 import { CartProvider, useCart, CartSummary } from '../../cart';
 import type { MenuCategory, RestaurantInfo } from '../types';
@@ -26,7 +27,19 @@ function MenuContent({ data }: { data: MenuPageProps['initialData'] }) {
 
     return (
         <main style={{ padding: 24, paddingBottom: 100, fontFamily: 'system-ui, sans-serif' }}>
-            <h1 style={{ fontSize: 32, marginBottom: 8 }}>Menu</h1>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <h1 style={{ fontSize: 32, marginBottom: 0 }}>เมนู</h1>
+                <Link
+                    href="/staff"
+                    style={{
+                        fontSize: 14,
+                        color: 'var(--accent, #2563eb)',
+                        textDecoration: 'none',
+                    }}
+                >
+                    เจ้าหน้าที่ →
+                </Link>
+            </header>
             <div style={{ marginBottom: 16 }}>
                 <div><b>Table:</b> {restaurant.tableCode}</div>
                 <div><b>Restaurant:</b> {restaurant.name}</div>
