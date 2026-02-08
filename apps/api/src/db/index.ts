@@ -1,4 +1,5 @@
 import { Pool } from 'pg';
+import { mockPool } from './mock';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
@@ -6,51 +7,45 @@ if (!DATABASE_URL) {
     throw new Error('DATABASE_URL environment variable is required');
 }
 
-export let pool = new Pool({
-    connectionString: DATABASE_URL,
-    max: 20,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
-});
+// Declare global type for TypeScript
+declare global {
+    var __db_pool: Pool | undefined;
+}
 
-// Mock query for development if DB is unavailable
-const mockPool = {
-    query: async (text: string, params?: any[]) => {
-        console.log('🏗️ [MOCK DB] Executing:', text);
-        // Simple mocks for basic queries
-        if (text.includes('SELECT NOW()')) return { rows: [{ now: new Date() }] };
-        if (text.includes('SELECT * FROM users')) {
-            return { rows: [{ id: 1, email: 'owner@test.com', password_hash: '$2a$10$rZ5qH8qVqJ5qH8qVqJ5qHOqH8qVqJ5qH8qVqJ5qH8qVqJ5qH8qVqJ', role: 'owner' }] };
-        }
-        if (text.includes('INSERT INTO orders')) {
-            return { rows: [{ id: Math.floor(Math.random() * 1000) }] };
-        }
-        if (text.includes('SELECT * FROM orders')) {
-            return { rows: [] };
-        }
-        return { rows: [] };
-    },
-    connect: async () => ({
-        query: mockPool.query,
-        release: () => { },
-    }),
-    on: () => { },
-    end: async () => { },
-};
-
-// Test connection and fallback
-pool.query('SELECT NOW()', (err, res) => {
-    if (err) {
-        console.warn('⚠️ Database connection failed, falling back to MOCK DB:', err.message);
-        (pool as any) = mockPool;
-    } else {
-        console.log('✅ Database connected:', res.rows[0].now);
+// Singleton Pattern: Reuse existing pool across hot-reloads
+function getPool(): Pool {
+    if (globalThis.__db_pool) {
+        return globalThis.__db_pool;
     }
-});
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
-    await pool.end();
-    console.log('Database pool closed');
-    process.exit(0);
-});
+    const newPool = new Pool({
+        connectionString: DATABASE_URL,
+        max: 5, // Reduced for dev stability (5 is plenty for local)
+        idleTimeoutMillis: 10000, // Close idle connections faster
+        connectionTimeoutMillis: 3000,
+    });
+
+    // Test connection and fallback
+    newPool.query('SELECT NOW()', (err, res) => {
+        if (err) {
+            console.warn('⚠️ Database connection failed, falling back to MOCK DB:', err.message);
+            globalThis.__db_pool = mockPool as unknown as Pool;
+        } else {
+            console.log('✅ Database connected:', res.rows[0].now);
+        }
+    });
+
+    globalThis.__db_pool = newPool;
+    return newPool;
+}
+
+export const pool = getPool();
+
+// Graceful shutdown (only register once)
+if (!globalThis.__db_pool) {
+    process.on('SIGINT', async () => {
+        await pool.end();
+        console.log('Database pool closed');
+        process.exit(0);
+    });
+}

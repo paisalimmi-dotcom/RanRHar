@@ -12,10 +12,7 @@ export const authStore = {
         try {
             const response = await authApi.login(email, password)
 
-            // Store JWT token
-            authApi.storeToken(response.accessToken)
-
-            // Store session data
+            // Session data (still useful for UI state, even if token is in cookie)
             const session: AuthSession = {
                 email: response.user.email,
                 role: response.user.role,
@@ -28,9 +25,14 @@ export const authStore = {
         }
     },
 
-    logout(): void {
-        authApi.clearToken()
-        localStorage.removeItem(SESSION_KEY)
+    async logout(): Promise<void> {
+        try {
+            await authApi.logout()
+        } catch (error) {
+            console.error('Logout failed:', error)
+        } finally {
+            localStorage.removeItem(SESSION_KEY)
+        }
     },
 
     getSession(): AuthSession | null {
@@ -48,18 +50,15 @@ export const authStore = {
 
     /**
      * Validate session with backend
-     * Returns true if token is valid, false otherwise
      */
     async validateSession(): Promise<boolean> {
         try {
-            const token = authApi.getToken()
-            if (!token) return false
-
+            // Just try to get user info - cookie will be sent automatically
             await authApi.getMe()
             return true
         } catch {
             // Token invalid or expired
-            this.logout()
+            await this.logout()
             return false
         }
     },

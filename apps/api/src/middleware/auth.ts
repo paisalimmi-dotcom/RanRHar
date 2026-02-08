@@ -34,12 +34,18 @@ export async function authMiddleware(
 ): Promise<void> {
     try {
         const authHeader = request.headers.authorization;
+        let token: string | undefined;
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.substring(7);
+        } else if (request.cookies && request.cookies.token) {
+            token = request.cookies.token;
+        }
+
+        if (!token) {
             return reply.status(401).send({ error: 'Unauthorized: Missing token' });
         }
 
-        const token = authHeader.substring(7);
         const decoded = jwt.verify(token, JWT_SECRET!) as JWTPayload;
 
         request.user = decoded;

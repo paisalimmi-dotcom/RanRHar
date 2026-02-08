@@ -49,8 +49,17 @@ export async function authRoutes(fastify: FastifyInstance) {
                 role: user.role,
             });
 
+            // Set httpOnly cookie
+            reply.setCookie('token', token, {
+                path: '/',
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production', // Secure in production
+                sameSite: 'strict',
+                maxAge: 3600, // 1 hour (matches token expiry)
+            });
+
             return reply.send({
-                accessToken: token,
+                message: 'Login successful',
                 user: {
                     email: user.email,
                     role: user.role,
@@ -60,6 +69,12 @@ export async function authRoutes(fastify: FastifyInstance) {
             console.error('Login error:', error);
             return reply.status(500).send({ error: 'Internal server error' });
         }
+    });
+
+    // POST /auth/logout - Clear auth cookie
+    fastify.post('/auth/logout', async (request, reply) => {
+        reply.clearCookie('token', { path: '/' });
+        return reply.send({ message: 'Logged out successfully' });
     });
 
     // GET /me - Get current user info

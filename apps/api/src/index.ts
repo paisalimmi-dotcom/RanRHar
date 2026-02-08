@@ -3,6 +3,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
+import cookie from '@fastify/cookie';
 import { authRoutes } from './routes/auth';
 import { orderRoutes } from './routes/orders';
 import { paymentRoutes } from './routes/payments';
@@ -68,6 +69,13 @@ async function start() {
             max: 100,
             timeWindow: '1 minute',
             cache: 10000,
+        });
+
+        // Security: Cookie support for httpOnly auth tokens
+        await fastify.register(cookie, {
+            secret: process.env.JWT_SECRET, // Use same strong secret for signing cookies
+            hook: 'onRequest',
+            parseOptions: {}
         });
 
         // Security: HTTPS enforcement in production

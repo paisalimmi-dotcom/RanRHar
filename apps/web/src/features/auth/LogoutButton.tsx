@@ -6,9 +6,10 @@ import { authStore } from '@/features/auth'
 export function LogoutButton() {
     const router = useRouter()
 
-    const handleLogout = () => {
-        authStore.logout()
+    const handleLogout = async () => {
+        await authStore.logout()
         router.push('/login')
+        router.refresh()
     }
 
     return (

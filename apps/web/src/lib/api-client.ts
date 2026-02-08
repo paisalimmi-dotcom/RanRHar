@@ -2,7 +2,6 @@
 // Centralized HTTP client with auth token injection
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-const TOKEN_KEY = 'auth_token';
 
 export class APIError extends Error {
     constructor(
@@ -35,13 +34,8 @@ async function apiRequest<T>(
         ...headers,
     };
 
-    // Inject auth token if required
-    if (requireAuth && typeof window !== 'undefined') {
-        const token = localStorage.getItem(TOKEN_KEY);
-        if (token) {
-            requestHeaders['Authorization'] = `Bearer ${token}`;
-        }
-    }
+    // Auth token is now handled via httpOnly cookies
+    // No need to inject Authorization header manually
 
     const config: RequestInit = {
         method,
@@ -95,4 +89,3 @@ export const apiClient = {
         apiRequest<T>(endpoint, { method: 'DELETE', requireAuth }),
 };
 
-export { TOKEN_KEY };

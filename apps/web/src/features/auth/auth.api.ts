@@ -1,7 +1,7 @@
 // Auth API Adapter
 // Replaces mock localStorage auth with backend API calls
 
-import { apiClient, TOKEN_KEY } from '@/lib/api-client';
+import { apiClient } from '@/lib/api-client';
 import type { AuthResponse, User } from './auth.types';
 
 export const authApi = {
@@ -31,28 +31,10 @@ export const authApi = {
     },
 
     /**
-     * Store auth token in localStorage
+     * Logout via API
+     * Clears httpOnly cookie
      */
-    storeToken(token: string): void {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem(TOKEN_KEY, token);
-        }
-    },
-
-    /**
-     * Remove auth token from localStorage
-     */
-    clearToken(): void {
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem(TOKEN_KEY);
-        }
-    },
-
-    /**
-     * Get stored auth token
-     */
-    getToken(): string | null {
-        if (typeof window === 'undefined') return null;
-        return localStorage.getItem(TOKEN_KEY);
+    async logout(): Promise<void> {
+        await apiClient.post('/auth/logout', {}, false);
     },
 };
