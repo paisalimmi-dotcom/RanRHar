@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { pool } from '../db';
 import { auditLog } from '../lib/audit';
 import { incrementPayments } from '../lib/metrics';
+import { ApiError, Errors } from '../lib/errors';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { 
     OrderIdParamSchema, 
@@ -20,36 +21,43 @@ export async function paymentRoutes(fastify: FastifyInstance) {
         },
     }, async (request, reply) => {
         const { id: orderId } = request.params as { id: string };
+        const orderIdNum = parseInt(orderId, 10);
+        if (isNaN(orderIdNum) || orderIdNum < 1) {
+            throw Errors.validation.invalidId(orderId);
+        }
+
         const { amount, method, notes } = request.body as { amount: number; method: 'CASH' | 'QR'; notes?: string };
+
+        if (!['CASH', 'QR'].includes(method)) {
+            throw Errors.payment.invalidMethod(method);
+        }
 
         try {
             // Check if order exists and get total
             const orderResult = await pool.query(
                 'SELECT id, total FROM orders WHERE id = $1',
-                [orderId]
+                [orderIdNum]
             );
 
             if (orderResult.rows.length === 0) {
-                return reply.status(404).send({ error: 'Order not found' });
+                throw Errors.order.notFound(orderId);
             }
 
             const order = orderResult.rows[0];
 
             // Validate amount matches order total
             if (parseFloat(amount.toFixed(2)) !== parseFloat(order.total)) {
-                return reply.status(400).send({
-                    error: `Payment amount (${amount}) must match order total (${order.total})`
-                });
+                throw Errors.payment.amountMismatch(parseFloat(order.total), amount);
             }
 
             // Check if payment already exists
             const existingPayment = await pool.query(
                 'SELECT id FROM payments WHERE order_id = $1',
-                [orderId]
+                [orderIdNum]
             );
 
             if (existingPayment.rows.length > 0) {
-                return reply.status(400).send({ error: 'Payment already exists for this order' });
+                throw Errors.payment.alreadyExists(orderId);
             }
 
             // Record payment
@@ -57,7 +65,7 @@ export async function paymentRoutes(fastify: FastifyInstance) {
                 `INSERT INTO payments (order_id, amount, method, notes, created_by)
                  VALUES ($1, $2, $3, $4, $5)
                  RETURNING id, order_id, amount, method, status, paid_at, created_by, notes`,
-                [orderId, amount, method, notes || null, request.user!.userId]
+                [orderIdNum, amount, method, notes || null, request.user!.userId]
             );
 
             const payment = paymentResult.rows[0];
@@ -76,7 +84,10 @@ export async function paymentRoutes(fastify: FastifyInstance) {
             });
         } catch (error) {
             request.log.error({ err: error }, 'Record payment error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to record payment');
         }
     });
 
@@ -88,6 +99,10 @@ export async function paymentRoutes(fastify: FastifyInstance) {
         },
     }, async (request, reply) => {
         const { id: orderId } = request.params as { id: string };
+        const orderIdNum = parseInt(orderId, 10);
+        if (isNaN(orderIdNum) || orderIdNum < 1) {
+            throw Errors.validation.invalidId(orderId);
+        }
 
         try {
             const result = await pool.query(
@@ -98,11 +113,11 @@ export async function paymentRoutes(fastify: FastifyInstance) {
                  WHERE p.order_id = $1
                  ORDER BY p.paid_at ASC
                  LIMIT 1`,
-                [orderId]
+                [orderIdNum]
             );
 
             if (result.rows.length === 0) {
-                return reply.status(404).send({ error: 'Payment not found' });
+                throw Errors.payment.notFound(orderId);
             }
 
             const payment = result.rows[0];
@@ -125,7 +140,10 @@ export async function paymentRoutes(fastify: FastifyInstance) {
             });
         } catch (error) {
             request.log.error({ err: error }, 'Get payment error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to retrieve payment');
         }
     });
 
@@ -137,6 +155,10 @@ export async function paymentRoutes(fastify: FastifyInstance) {
         },
     }, async (request, reply) => {
         const { id: orderId } = request.params as { id: string };
+        const orderIdNum = parseInt(orderId, 10);
+        if (isNaN(orderIdNum) || orderIdNum < 1) {
+            throw Errors.validation.invalidId(orderId);
+        }
 
         try {
             const result = await pool.query(
@@ -146,7 +168,7 @@ export async function paymentRoutes(fastify: FastifyInstance) {
                  JOIN users u ON p.created_by = u.id
                  WHERE p.order_id = $1
                  ORDER BY p.paid_at ASC`,
-                [orderId]
+                [orderIdNum]
             );
 
             const payments = result.rows.map((p: any) => ({
@@ -171,7 +193,7 @@ export async function paymentRoutes(fastify: FastifyInstance) {
             // Get order total
             const orderResult = await pool.query(
                 'SELECT total FROM orders WHERE id = $1',
-                [orderId]
+                [orderIdNum]
             );
 
             const orderTotal = orderResult.rows.length > 0 ? parseFloat(orderResult.rows[0].total) : 0;
@@ -185,7 +207,10 @@ export async function paymentRoutes(fastify: FastifyInstance) {
             });
         } catch (error) {
             request.log.error({ err: error }, 'Get payments error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to retrieve payments');
         }
     });
 
@@ -198,17 +223,33 @@ export async function paymentRoutes(fastify: FastifyInstance) {
         },
     }, async (request, reply) => {
         const { id: orderId } = request.params as { id: string };
+        const orderIdNum = parseInt(orderId, 10);
+        if (isNaN(orderIdNum) || orderIdNum < 1) {
+            throw Errors.validation.invalidId(orderId);
+        }
+
         const { payments: paymentItems } = request.body as { payments: Array<{ amount: number; method: 'CASH' | 'QR'; payer?: string; notes?: string }> };
+
+        if (!paymentItems || paymentItems.length === 0) {
+            throw Errors.validation.required('payments');
+        }
+
+        // Validate payment methods
+        for (const payment of paymentItems) {
+            if (!['CASH', 'QR'].includes(payment.method)) {
+                throw Errors.payment.invalidMethod(payment.method);
+            }
+        }
 
         try {
             // Check if order exists and get total
             const orderResult = await pool.query(
                 'SELECT id, total FROM orders WHERE id = $1',
-                [orderId]
+                [orderIdNum]
             );
 
             if (orderResult.rows.length === 0) {
-                return reply.status(404).send({ error: 'Order not found' });
+                throw Errors.order.notFound(orderId);
             }
 
             const order = orderResult.rows[0];
@@ -217,19 +258,17 @@ export async function paymentRoutes(fastify: FastifyInstance) {
             // Validate total amount matches order total
             const totalAmount = paymentItems.reduce((sum, p) => sum + p.amount, 0);
             if (Math.abs(totalAmount - orderTotal) > 0.01) {
-                return reply.status(400).send({
-                    error: `Total payment amount (${totalAmount.toFixed(2)}) must match order total (${orderTotal.toFixed(2)})`
-                });
+                throw Errors.payment.amountMismatch(orderTotal, totalAmount);
             }
 
             // Check if any payment already exists (for split bill, we allow multiple)
             const existingPayments = await pool.query(
                 'SELECT id FROM payments WHERE order_id = $1',
-                [orderId]
+                [orderIdNum]
             );
 
             if (existingPayments.rows.length > 0) {
-                return reply.status(400).send({ error: 'Payments already exist for this order. Use individual payment endpoints or clear existing payments first.' });
+                throw Errors.payment.alreadyExists(orderId);
             }
 
             // Insert all payments
@@ -239,7 +278,7 @@ export async function paymentRoutes(fastify: FastifyInstance) {
                     `INSERT INTO payments (order_id, amount, method, notes, payer, payment_type, created_by)
                      VALUES ($1, $2, $3, $4, $5, 'SPLIT', $6)
                      RETURNING id, order_id, amount, method, status, paid_at, created_by, notes, payer, payment_type`,
-                    [orderId, paymentItem.amount, paymentItem.method, paymentItem.notes || null, paymentItem.payer || null, request.user!.userId]
+                    [orderIdNum, paymentItem.amount, paymentItem.method, paymentItem.notes || null, paymentItem.payer || null, request.user!.userId]
                 );
 
                 const payment = paymentResult.rows[0];
@@ -249,7 +288,7 @@ export async function paymentRoutes(fastify: FastifyInstance) {
                     entityId: payment.id.toString(), 
                     actorId: request.user!.userId, 
                     actorEmail: request.user!.email, 
-                    metadata: { orderId, amount: paymentItem.amount, method: paymentItem.method, payer: paymentItem.payer, paymentType: 'SPLIT' } 
+                    metadata: { orderId: orderIdNum, amount: paymentItem.amount, method: paymentItem.method, payer: paymentItem.payer, paymentType: 'SPLIT' } 
                 });
                 incrementPayments();
 
@@ -275,7 +314,10 @@ export async function paymentRoutes(fastify: FastifyInstance) {
             });
         } catch (error) {
             request.log.error({ err: error }, 'Split payment error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to create split payment');
         }
     });
 
@@ -293,15 +335,32 @@ export async function paymentRoutes(fastify: FastifyInstance) {
             notes?: string 
         };
 
+        if (!orderIds || orderIds.length === 0) {
+            throw Errors.validation.required('orderIds');
+        }
+
+        if (!['CASH', 'QR'].includes(method)) {
+            throw Errors.payment.invalidMethod(method);
+        }
+
+        // Validate order IDs
+        const orderIdNums = orderIds.map(id => {
+            const num = parseInt(id, 10);
+            if (isNaN(num) || num < 1) {
+                throw Errors.validation.invalidId(id);
+            }
+            return num;
+        });
+
         try {
             // Validate all orders exist and get totals
             const orderResult = await pool.query(
                 `SELECT id, total FROM orders WHERE id = ANY($1::int[])`,
-                [orderIds.map(id => parseInt(id, 10))]
+                [orderIdNums]
             );
 
             if (orderResult.rows.length !== orderIds.length) {
-                return reply.status(404).send({ error: 'One or more orders not found' });
+                throw Errors.order.notFound('One or more orders');
             }
 
             const orders = orderResult.rows;
@@ -309,32 +368,30 @@ export async function paymentRoutes(fastify: FastifyInstance) {
 
             // Validate payment amount matches total
             if (Math.abs(amount - totalAmount) > 0.01) {
-                return reply.status(400).send({
-                    error: `Payment amount (${amount.toFixed(2)}) must match combined order total (${totalAmount.toFixed(2)})`
-                });
+                throw Errors.payment.amountMismatch(totalAmount, amount);
             }
 
             // Check if any order already has payment
             const existingPayments = await pool.query(
                 'SELECT order_id FROM payments WHERE order_id = ANY($1::int[])',
-                [orderIds.map(id => parseInt(id, 10))]
+                [orderIdNums]
             );
 
             if (existingPayments.rows.length > 0) {
-                return reply.status(400).send({ error: 'One or more orders already have payments' });
+                throw Errors.payment.alreadyExists('One or more orders');
             }
 
             // Insert payment for each order
             const createdPayments = [];
-            for (const orderId of orderIds) {
-                const order = orders.find((o: any) => o.id.toString() === orderId);
+            for (const orderIdNum of orderIdNums) {
+                const order = orders.find((o: any) => o.id === orderIdNum);
                 if (!order) continue;
 
                 const paymentResult = await pool.query(
                     `INSERT INTO payments (order_id, amount, method, notes, payment_type, created_by)
                      VALUES ($1, $2, $3, $4, 'COMBINED', $5)
                      RETURNING id, order_id, amount, method, status, paid_at, created_by, notes, payment_type`,
-                    [orderId, parseFloat(order.total), method, notes || null, request.user!.userId]
+                    [orderIdNum, parseFloat(order.total), method, notes || null, request.user!.userId]
                 );
 
                 const payment = paymentResult.rows[0];
@@ -344,7 +401,7 @@ export async function paymentRoutes(fastify: FastifyInstance) {
                     entityId: payment.id.toString(), 
                     actorId: request.user!.userId, 
                     actorEmail: request.user!.email, 
-                    metadata: { orderId, amount: parseFloat(order.total), method, paymentType: 'COMBINED', combinedOrderIds: orderIds } 
+                    metadata: { orderId: orderIdNum, amount: parseFloat(order.total), method, paymentType: 'COMBINED', combinedOrderIds: orderIdNums } 
                 });
                 incrementPayments();
 
@@ -369,7 +426,10 @@ export async function paymentRoutes(fastify: FastifyInstance) {
             });
         } catch (error) {
             request.log.error({ err: error }, 'Combined payment error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to create combined payment');
         }
     });
 }
