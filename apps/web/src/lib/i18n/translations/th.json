@@ -22,6 +22,8 @@
   "menu": {
     "title": "เมนู",
     "searchPlaceholder": "ค้นหาเมนู...",
+    "noSearchResults": "ไม่พบเมนูที่ตรงกับคำค้นหา",
+    "noMenuItems": "ยังไม่มีเมนู",
     "categories": {
       "recommended": "แนะนำ",
       "mainDishes": "อาหารจานหลัก",

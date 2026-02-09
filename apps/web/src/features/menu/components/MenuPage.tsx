@@ -9,6 +9,7 @@ import type { MenuCategory, MenuItem, RestaurantInfo } from '../types';
 import { TableWarningBanner } from '@/components/TableWarningBanner';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { useI18n } from '@/lib/i18n/I18nProvider';
+import { menuService } from '../services/menu.service';
 
 const TABLE_CODE_KEY = 'ranrhar_table_code';
 const LAST_ORDER_TABLE_KEY = 'lastOrderTableCode';
@@ -22,16 +23,39 @@ type MenuPageProps = {
 };
 
 
-function MenuContent({ data }: { data: MenuPageProps['initialData'] }) {
-    const { t } = useI18n();
+function MenuContent({ initialData }: { initialData: MenuPageProps['initialData'] }) {
+    const { t, language } = useI18n();
+    const [restaurant, setRestaurant] = useState<RestaurantInfo>(initialData.restaurant);
+    const [categories, setCategories] = useState<MenuCategory[]>(initialData.categories);
+    const [loading, setLoading] = useState(false);
     
     useEffect(() => {
-        if (data?.restaurant?.tableCode) {
-            sessionStorage.setItem(TABLE_CODE_KEY, data.restaurant.tableCode);
+        if (restaurant?.tableCode) {
+            sessionStorage.setItem(TABLE_CODE_KEY, restaurant.tableCode);
         }
-    }, [data?.restaurant?.tableCode]);
+    }, [restaurant?.tableCode]);
 
-    const { restaurant, categories } = data;
+    // Refetch menu when language changes
+    useEffect(() => {
+        if (!restaurant?.tableCode) return;
+        
+        let alive = true;
+        setLoading(true);
+        
+        menuService.getMenuForTable(restaurant.tableCode, language).then((menuData) => {
+            if (!alive) return;
+            setRestaurant(menuData.restaurant);
+            setCategories(menuData.categories);
+            setLoading(false);
+        }).catch(() => {
+            if (!alive) return;
+            setLoading(false);
+        });
+
+        return () => {
+            alive = false;
+        };
+    }, [language, restaurant?.tableCode]);
     const { addToCart } = useCart();
     const [search, setSearch] = useState('');
     const [showStaffLink, setShowStaffLink] = useState(false);
@@ -131,7 +155,7 @@ function MenuContent({ data }: { data: MenuPageProps['initialData'] }) {
 
                 {filteredCategories.length === 0 ? (
                     <div className="text-center py-16 text-gray-500">
-                        {search ? 'ไม่พบเมนูที่ตรงกับคำค้นหา' : 'ยังไม่มีเมนู'}
+                        {search ? t('menu.noSearchResults') : t('menu.noMenuItems')}
                     </div>
                 ) : (
                     filteredCategories.map((cat) => (
@@ -253,7 +277,7 @@ function MenuItemCard({ item, onAdd }: { item: MenuItem; onAdd: () => void }) {
                         className="px-4 py-2 rounded-xl bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 active:scale-95 transition-all"
                         aria-label={`${t('common.add')} ${item.name}`}
                     >
-                        เพิ่ม
+                        {t('common.add')}
                     </button>
                 </div>
             </div>
@@ -264,7 +288,7 @@ function MenuItemCard({ item, onAdd }: { item: MenuItem; onAdd: () => void }) {
 export default function MenuPage({ initialData }: MenuPageProps) {
     return (
         <>
-            <MenuContent data={initialData} />
+            <MenuContent initialData={initialData} />
             <CartSummary />
         </>
     );

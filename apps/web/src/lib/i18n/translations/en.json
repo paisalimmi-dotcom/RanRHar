@@ -22,6 +22,8 @@
   "menu": {
     "title": "Menu",
     "searchPlaceholder": "Search menu...",
+    "noSearchResults": "No menu items found matching your search",
+    "noMenuItems": "No menu items available",
     "categories": {
       "recommended": "Recommended",
       "mainDishes": "Main Dishes",

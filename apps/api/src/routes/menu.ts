@@ -195,11 +195,12 @@ export async function menuRoutes(fastify: FastifyInstance) {
         }
     });
 
-    // GET /menu?tableCode=... - Get menu for table (public, no auth)
+    // GET /menu?tableCode=...&lang=... - Get menu for table (public, no auth)
     fastify.get<{
-        Querystring: { tableCode?: string };
+        Querystring: { tableCode?: string; lang?: string };
     }>('/menu', async (request, reply) => {
-        const { tableCode = 'A12' } = request.query;
+        const { tableCode = 'A12', lang = 'th' } = request.query;
+        const isEnglish = lang === 'en';
 
         try {
             const [restaurantResult, categoriesResult] = await Promise.all([
@@ -207,7 +208,7 @@ export async function menuRoutes(fastify: FastifyInstance) {
                     `SELECT id, name FROM restaurants LIMIT 1`
                 ),
                 pool.query(
-                    `SELECT mc.id, mc.name, mc.sort_order
+                    `SELECT mc.id, mc.name, mc.name_en, mc.sort_order
                      FROM menu_categories mc
                      ORDER BY mc.sort_order ASC`
                 ),
@@ -221,9 +222,9 @@ export async function menuRoutes(fastify: FastifyInstance) {
             }
 
             const categoriesWithItems = await Promise.all(
-                categories.map(async (cat: { id: number; name: string; sort_order: number }) => {
+                categories.map(async (cat: { id: number; name: string; name_en: string | null; sort_order: number }) => {
                     const itemsResult = await pool.query(
-                        `SELECT id, name, price_thb as "priceTHB", image_url as "imageUrl"
+                        `SELECT id, name, name_en, price_thb as "priceTHB", image_url as "imageUrl"
                          FROM menu_items
                          WHERE category_id = $1
                          ORDER BY sort_order ASC`,
@@ -231,10 +232,10 @@ export async function menuRoutes(fastify: FastifyInstance) {
                     );
                     return {
                         id: `cat-${cat.id}`,
-                        name: cat.name,
-                        items: itemsResult.rows.map((r: { id: number; name: string; priceTHB: number; imageUrl: string }) => ({
+                        name: isEnglish && cat.name_en ? cat.name_en : cat.name,
+                        items: itemsResult.rows.map((r: { id: number; name: string; name_en: string | null; priceTHB: number; imageUrl: string }) => ({
                             id: `m-${r.id}`,
-                            name: r.name,
+                            name: isEnglish && r.name_en ? r.name_en : r.name,
                             priceTHB: Number(r.priceTHB),
                             imageUrl: r.imageUrl || undefined,
                         })),
@@ -245,7 +246,7 @@ export async function menuRoutes(fastify: FastifyInstance) {
             return reply.send({
                 restaurant: {
                     name: restaurant.name,
-                    branchName: 'สาขา 001',
+                    branchName: isEnglish ? 'Branch 001' : 'สาขา 001',
                     tableCode,
                 },
                 categories: categoriesWithItems,

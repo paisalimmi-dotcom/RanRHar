@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
 export type Language = 'th' | 'en';
 
@@ -61,24 +61,31 @@ export function I18nProvider({ children }: { children: ReactNode }) {
         });
     }, []);
 
+    // Reload translations when language changes (but not on initial load)
+    useEffect(() => {
+        if (!loading) {
+            loadTranslations(language).then((trans) => {
+                setTranslations(trans);
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [language]);
+
     const setLanguage = (lang: Language) => {
         setLanguageState(lang);
         if (typeof window !== 'undefined') {
             localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
         }
-        loadTranslations(lang).then((trans) => {
-            setTranslations(trans);
-        });
     };
 
-    const t = (key: string, params?: Record<string, string | number>): string => {
+    const t = useCallback((key: string, params?: Record<string, string | number>): string => {
         const value = getNestedValue(translations, key);
         if (!value) {
             console.warn(`Translation key not found: ${key}`);
             return key;
         }
         return interpolate(String(value), params);
-    };
+    }, [translations]);
 
     if (loading) {
         return <>{children}</>; // Render children while loading
