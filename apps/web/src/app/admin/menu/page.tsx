@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { AuthGuard } from '@/features/auth/auth.guard';
 import { StaffNav } from '@/features/auth/components/StaffNav';
 import { menuAdminApi, type MenuItemAdmin, type MenuCategoryAdmin } from '@/features/menu/menu-admin.api';
+import { ImageUpload } from '@/components/ImageUpload';
 
 function MenuItemEdit({
     item,
@@ -296,14 +297,12 @@ function CategorySection({
                             className="w-20 px-2 py-1 border rounded"
                         />
                     </div>
-                    <div className="flex-1 min-w-[120px]">
-                        <label className="block text-xs text-gray-500">URL รูป</label>
-                        <input
-                            type="url"
+                    <div className="flex-1 min-w-[200px]">
+                        <ImageUpload
                             value={newItemImage}
-                            onChange={(e) => setNewItemImage(e.target.value)}
-                            placeholder="https://..."
-                            className="w-full px-2 py-1 border rounded"
+                            onChange={setNewItemImage}
+                            label="รูปภาพ"
+                            className="text-xs"
                         />
                     </div>
                     <button
