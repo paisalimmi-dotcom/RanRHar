@@ -13,6 +13,7 @@ import { orderRoutes } from './routes/orders';
 import { paymentRoutes } from './routes/payments';
 import { inventoryRoutes } from './routes/inventory';
 import { menuRoutes } from './routes/menu';
+import { reservationRoutes } from './routes/reservations';
 import { prepareDatabase, pool } from './db';
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
@@ -143,6 +144,7 @@ async function start() {
         await fastify.register(paymentRoutes, { prefix: '/v1' });
         await fastify.register(inventoryRoutes, { prefix: '/v1' });
         await fastify.register(menuRoutes, { prefix: '/v1' });
+        await fastify.register(reservationRoutes, { prefix: '/v1' });
 
         // Request counter for metrics
         fastify.addHook('onRequest', async () => {

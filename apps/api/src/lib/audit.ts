@@ -5,6 +5,9 @@ export type AuditAction =
     | 'order.status_update'
     | 'order.cancel'
     | 'payment.create'
+    | 'reservation.create'
+    | 'reservation.update'
+    | 'reservation.cancel'
     | 'auth.login'
     | 'auth.logout'
     | 'auth.failed_login';
