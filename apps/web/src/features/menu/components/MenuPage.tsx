@@ -1,10 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { CartProvider, useCart, CartSummary } from '../../cart';
-import { authStore } from '../../auth/auth.store';
 import type { MenuCategory, MenuItem, RestaurantInfo } from '../types';
 import { TableWarningBanner } from '@/components/TableWarningBanner';
 import { LanguageToggle } from '@/components/LanguageToggle';
@@ -58,13 +56,8 @@ function MenuContent({ initialData }: { initialData: MenuPageProps['initialData'
     }, [language, restaurant?.tableCode]);
     const { addToCart } = useCart();
     const [search, setSearch] = useState('');
-    const [showStaffLink, setShowStaffLink] = useState(false);
-    const [userRole, setUserRole] = useState<string | null>(null);
     const [lastOrderTableCode, setLastOrderTableCode] = useState<string | null>(null);
     useEffect(() => {
-        const session = authStore.getSession();
-        setShowStaffLink(!!session);
-        setUserRole(session?.role || null);
         // Check for last order table code
         if (typeof window !== 'undefined') {
             const last = sessionStorage.getItem(LAST_ORDER_TABLE_KEY);
@@ -98,24 +91,6 @@ function MenuContent({ initialData }: { initialData: MenuPageProps['initialData'
                         <h1 className="text-2xl font-bold text-gray-900">{t('menu.title')}</h1>
                         <div className="flex items-center gap-3">
                             <LanguageToggle />
-                            {showStaffLink && (
-                                <>
-                                    {(userRole === 'manager' || userRole === 'owner') && (
-                                        <Link
-                                            href="/admin/menu"
-                                            className="text-sm text-blue-600 hover:underline font-medium"
-                                        >
-                                            {t('menu.manageMenu') || 'จัดการเมนู'} →
-                                        </Link>
-                                    )}
-                                    <Link
-                                        href="/staff"
-                                        className="text-sm text-blue-600 hover:underline font-medium"
-                                    >
-                                        {t('common.staff', {}) || 'เจ้าหน้าที่'} →
-                                    </Link>
-                                </>
-                            )}
                         </div>
                     </div>
                     <div className="text-sm text-gray-600 mb-3">
