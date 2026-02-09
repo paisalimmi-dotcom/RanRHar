@@ -7,6 +7,7 @@ import { orderApi } from '@/features/order/order.api'
 import type { Order, OrderStatus } from '@/shared/types/order'
 import { PaymentModal } from '@/features/payment/components/PaymentModal'
 import { SplitBillModal } from '@/features/payment/components/SplitBillModal'
+import { CombinedBillModal } from '@/features/payment/components/CombinedBillModal'
 import { paymentApi } from '@/features/payment/payment.api'
 import type { PaymentMethod } from '@/shared/types/payment'
 import { CancelOrderModal } from '@/components/CancelOrderModal'
@@ -37,6 +38,7 @@ export default function OrdersPage() {
     const [statusFilter, setStatusFilter] = useState<OrderStatus | 'ALL'>('ALL')
     const [paymentModal, setPaymentModal] = useState<{ orderId: string; total: number } | null>(null)
     const [splitBillModal, setSplitBillModal] = useState<{ orderId: string; total: number } | null>(null)
+    const [combinedBillModal, setCombinedBillModal] = useState<boolean>(false)
     const [cancelModal, setCancelModal] = useState<{ orderId: string; orderStatus: OrderStatus } | null>(null)
 
     useEffect(() => {
@@ -102,6 +104,16 @@ export default function OrdersPage() {
         setSplitBillModal(null)
     }
 
+    async function handleCombinedPayment(orderIds: string[], amount: number, method: PaymentMethod, notes?: string) {
+        await paymentApi.combinedPayment(orderIds, amount, method, notes)
+        // Refresh orders to get updated payment
+        await loadOrders()
+        setCombinedBillModal(false)
+    }
+
+    // Get orders that can be combined (not paid yet)
+    const availableOrders = orders.filter(o => !o.payment && o.status !== 'CANCELLED')
+
     async function handleCancelOrder(reason?: string, refundRequired?: boolean) {
         if (!cancelModal) return
 
@@ -156,6 +168,14 @@ export default function OrdersPage() {
                             </p>
                         </div>
                         <div className="flex gap-3 items-center">
+                            {canRecordPayment && availableOrders.length >= 2 && (
+                                <button
+                                    onClick={() => setCombinedBillModal(true)}
+                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
+                                >
+                                    จ่ายรวม ({availableOrders.length})
+                                </button>
+                            )}
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value as OrderStatus | 'ALL')}
@@ -315,6 +335,15 @@ export default function OrdersPage() {
                         isOpen={true}
                         onClose={() => setSplitBillModal(null)}
                         onConfirm={handleSplitPayment}
+                    />
+                )}
+
+                {combinedBillModal && (
+                    <CombinedBillModal
+                        orders={availableOrders}
+                        isOpen={true}
+                        onClose={() => setCombinedBillModal(false)}
+                        onConfirm={handleCombinedPayment}
                     />
                 )}
 
