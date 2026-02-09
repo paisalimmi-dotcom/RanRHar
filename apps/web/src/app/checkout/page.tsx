@@ -1,5 +1,6 @@
 'use client';
 
+import { APIError } from '@/lib/api-client';
 import { CartProvider } from '@/features/cart/CartProvider';
 import { useCart } from '@/features/cart/hooks/useCart';
 import { createOrder } from '@/features/order/order.store';
@@ -11,6 +12,7 @@ function CheckoutContent() {
     const { items, totalItems, totalPrice, clearCart, isInitialized } = useCart();
     const router = useRouter();
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+    const [orderError, setOrderError] = useState<string | null>(null);
 
     // Redirect if cart is empty, but wait until initialized
     useEffect(() => {
@@ -26,17 +28,13 @@ function CheckoutContent() {
         setIsPlacingOrder(true);
 
         try {
-            // Create order via API
+            setOrderError(null);
             const order = await createOrder(items);
-
-            // Clear cart
             clearCart();
-
-            // Redirect to success page
             router.push(`/order/success/${order.id}`);
         } catch (error) {
-            console.error('Failed to place order:', error);
-            alert('Failed to place order. Please try again.');
+            const message = error instanceof APIError ? error.message : 'ไม่สามารถสั่งอาหารได้ กรุณาลองใหม่อีกครั้ง';
+            setOrderError(message);
         } finally {
             setIsPlacingOrder(false);
         }
@@ -64,6 +62,12 @@ function CheckoutContent() {
                 <h1 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '24px' }}>
                     Checkout
                 </h1>
+
+                {orderError && (
+                    <div style={{ marginBottom: '16px', padding: '12px', background: '#fee', color: '#c00', borderRadius: '8px', fontSize: '14px' }}>
+                        {orderError}
+                    </div>
+                )}
 
                 {/* Order Items */}
                 <div style={{ marginBottom: '24px' }}>

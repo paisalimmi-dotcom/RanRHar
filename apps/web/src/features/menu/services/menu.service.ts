@@ -1,11 +1,15 @@
-import type { MenuCategory, RestaurantInfo } from "../types";
+import { apiClient } from '@/lib/api-client';
+import type { MenuCategory, RestaurantInfo } from '../types';
 
 type MenuResponse = {
     restaurant: RestaurantInfo;
     categories: MenuCategory[];
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+type MenuApiResponse = {
+    restaurant?: { name?: string; branchName?: string };
+    categories?: MenuCategory[];
+};
 
 const MOCK_MENU: MenuResponse = {
     restaurant: { name: "RanRHar (Mock)", branchName: "Branch 001 (Mock)", tableCode: "" },
@@ -31,16 +35,14 @@ const MOCK_MENU: MenuResponse = {
 export const menuService = {
     async getMenuForTable(tableCode: string): Promise<MenuResponse> {
         try {
-            const res = await fetch(`${API_BASE}/v1/menu?tableCode=${encodeURIComponent(tableCode)}`);
-
-            if (!res.ok) throw new Error(`API ${res.status}`);
-
-            const data = await res.json();
-
+            const data = await apiClient.get<MenuApiResponse>(
+                `/menu?tableCode=${encodeURIComponent(tableCode)}`,
+                false
+            );
             return {
                 restaurant: {
-                    name: data.restaurant?.name ?? "RanRHar",
-                    branchName: data.restaurant?.branchName ?? "Branch 001",
+                    name: data.restaurant?.name ?? 'RanRHar',
+                    branchName: data.restaurant?.branchName ?? 'Branch 001',
                     tableCode,
                 },
                 categories: data.categories ?? [],
