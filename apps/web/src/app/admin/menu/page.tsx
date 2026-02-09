@@ -14,12 +14,14 @@ function MenuItemEdit({
     onSaved: () => void;
 }) {
     const [name, setName] = useState(item.name);
+    const [nameEn, setNameEn] = useState(item.nameEn ?? '');
     const [priceTHB, setPriceTHB] = useState(item.priceTHB);
     const [imageUrl, setImageUrl] = useState(item.imageUrl ?? '');
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         setName(item.name);
+        setNameEn(item.nameEn ?? '');
         setPriceTHB(item.priceTHB);
         setImageUrl(item.imageUrl ?? '');
     }, [item]);
@@ -29,6 +31,7 @@ function MenuItemEdit({
         try {
             await menuAdminApi.updateMenuItem(item.id, {
                 name,
+                nameEn: nameEn.trim() || undefined,
                 priceTHB,
                 imageUrl: imageUrl.trim() || null,
             });
@@ -60,13 +63,23 @@ function MenuItemEdit({
                 )}
             </div>
             <div className="p-4 flex-1 min-w-0">
-                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                     <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-0.5">ชื่อ</label>
+                        <label className="block text-xs font-medium text-gray-500 mb-0.5">ชื่อ (ไทย)</label>
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
+                            className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-0.5">ชื่อ (English)</label>
+                        <input
+                            type="text"
+                            value={nameEn}
+                            onChange={(e) => setNameEn(e.target.value)}
+                            placeholder="English name"
                             className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                     </div>
@@ -121,21 +134,24 @@ function CategorySection({
 }) {
     const [editing, setEditing] = useState(false);
     const [name, setName] = useState(category.name);
+    const [nameEn, setNameEn] = useState(category.nameEn ?? '');
     const [saving, setSaving] = useState(false);
     const [showAddItem, setShowAddItem] = useState(false);
     const [newItemName, setNewItemName] = useState('');
+    const [newItemNameEn, setNewItemNameEn] = useState('');
     const [newItemPrice, setNewItemPrice] = useState(0);
     const [newItemImage, setNewItemImage] = useState('');
     const [adding, setAdding] = useState(false);
 
     useEffect(() => {
         setName(category.name);
-    }, [category.name]);
+        setNameEn(category.nameEn ?? '');
+    }, [category.name, category.nameEn]);
 
     const handleSaveCategory = async () => {
         setSaving(true);
         try {
-            await menuAdminApi.updateCategory(category.id, { name });
+            await menuAdminApi.updateCategory(category.id, { name, nameEn: nameEn.trim() || undefined });
             setEditing(false);
             onCategorySaved();
         } catch (e) {
@@ -170,10 +186,12 @@ function CategorySection({
             await menuAdminApi.createMenuItem({
                 categoryId: category.id,
                 name: newItemName.trim(),
+                nameEn: newItemNameEn.trim() || undefined,
                 priceTHB: newItemPrice,
                 imageUrl: newItemImage.trim() || null,
             });
             setNewItemName('');
+            setNewItemNameEn('');
             setNewItemPrice(0);
             setNewItemImage('');
             setShowAddItem(false);
@@ -192,13 +210,23 @@ function CategorySection({
                 <div className="flex items-center gap-2">
                     {editing ? (
                         <>
-                            <input
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                className="px-2 py-1 border rounded text-base font-semibold"
-                                autoFocus
-                            />
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="ชื่อ (ไทย)"
+                                    className="px-2 py-1 border rounded text-base font-semibold"
+                                    autoFocus
+                                />
+                                <input
+                                    type="text"
+                                    value={nameEn}
+                                    onChange={(e) => setNameEn(e.target.value)}
+                                    placeholder="ชื่อ (English)"
+                                    className="px-2 py-1 border rounded text-base font-semibold"
+                                />
+                            </div>
                             <button
                                 onClick={handleSaveCategory}
                                 disabled={saving}
@@ -239,12 +267,22 @@ function CategorySection({
             {showAddItem && (
                 <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-wrap gap-2 items-end">
                     <div>
-                        <label className="block text-xs text-gray-500">ชื่อ</label>
+                        <label className="block text-xs text-gray-500">ชื่อ (ไทย)</label>
                         <input
                             type="text"
                             value={newItemName}
                             onChange={(e) => setNewItemName(e.target.value)}
                             placeholder="ชื่อเมนู"
+                            className="px-2 py-1 border rounded"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs text-gray-500">ชื่อ (English)</label>
+                        <input
+                            type="text"
+                            value={newItemNameEn}
+                            onChange={(e) => setNewItemNameEn(e.target.value)}
+                            placeholder="English name"
                             className="px-2 py-1 border rounded"
                         />
                     </div>
@@ -295,6 +333,7 @@ export default function AdminMenuPage() {
     const [loading, setLoading] = useState(true);
     const [showAddCat, setShowAddCat] = useState(false);
     const [newCatName, setNewCatName] = useState('');
+    const [newCatNameEn, setNewCatNameEn] = useState('');
     const [addingCat, setAddingCat] = useState(false);
 
     const fetchMenu = useCallback(async () => {
@@ -321,8 +360,9 @@ export default function AdminMenuPage() {
         }
         setAddingCat(true);
         try {
-            await menuAdminApi.createCategory(newCatName.trim(), categories.length);
+            await menuAdminApi.createCategory(newCatName.trim(), newCatNameEn.trim() || undefined, categories.length);
             setNewCatName('');
+            setNewCatNameEn('');
             setShowAddCat(false);
             fetchMenu();
         } catch (e) {
@@ -369,12 +409,22 @@ export default function AdminMenuPage() {
                     {showAddCat && (
                         <div className="mb-6 p-4 bg-white rounded-xl shadow-sm border flex flex-wrap gap-2 items-end">
                             <div>
-                                <label className="block text-sm text-gray-600 mb-1">ชื่อหมวดหมู่</label>
+                                <label className="block text-sm text-gray-600 mb-1">ชื่อหมวดหมู่ (ไทย)</label>
                                 <input
                                     type="text"
                                     value={newCatName}
                                     onChange={(e) => setNewCatName(e.target.value)}
                                     placeholder="เช่น อาหารจานหลัก เครื่องดื่ม"
+                                    className="px-3 py-2 border rounded-lg w-64"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-1">ชื่อหมวดหมู่ (English)</label>
+                                <input
+                                    type="text"
+                                    value={newCatNameEn}
+                                    onChange={(e) => setNewCatNameEn(e.target.value)}
+                                    placeholder="e.g. Main Dishes, Beverages"
                                     className="px-3 py-2 border rounded-lg w-64"
                                 />
                             </div>

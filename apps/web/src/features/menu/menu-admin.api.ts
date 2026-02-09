@@ -3,6 +3,7 @@ import { apiClient } from '@/lib/api-client';
 export type MenuItemAdmin = {
     id: number;
     name: string;
+    nameEn?: string;
     priceTHB: number;
     imageUrl?: string;
 };
@@ -10,6 +11,7 @@ export type MenuItemAdmin = {
 export type MenuCategoryAdmin = {
     id: number;
     name: string;
+    nameEn?: string;
     sortOrder?: number;
     items: MenuItemAdmin[];
 };
@@ -24,15 +26,15 @@ export const menuAdminApi = {
         return apiClient.get<MenuAdminResponse>('/menu/admin');
     },
 
-    createCategory: async (name: string, sortOrder?: number): Promise<{ id: number; name: string; sortOrder: number }> => {
-        return apiClient.post<{ id: number; name: string; sortOrder: number }>('/menu/categories', { name, sortOrder });
+    createCategory: async (name: string, nameEn?: string, sortOrder?: number): Promise<{ id: number; name: string; nameEn?: string; sortOrder: number }> => {
+        return apiClient.post<{ id: number; name: string; nameEn?: string; sortOrder: number }>('/menu/categories', { name, nameEn, sortOrder });
     },
 
     updateCategory: async (
         id: number,
-        payload: { name?: string; sortOrder?: number }
-    ): Promise<{ id: number; name: string; sortOrder: number }> => {
-        return apiClient.patch<{ id: number; name: string; sortOrder: number }>(`/menu/categories/${id}`, payload);
+        payload: { name?: string; nameEn?: string; sortOrder?: number }
+    ): Promise<{ id: number; name: string; nameEn?: string; sortOrder: number }> => {
+        return apiClient.patch<{ id: number; name: string; nameEn?: string; sortOrder: number }>(`/menu/categories/${id}`, payload);
     },
 
     deleteCategory: async (id: number): Promise<void> => {
@@ -42,6 +44,7 @@ export const menuAdminApi = {
     createMenuItem: async (payload: {
         categoryId: number;
         name: string;
+        nameEn?: string;
         priceTHB: number;
         imageUrl?: string | null;
     }): Promise<MenuItemAdmin> => {
@@ -50,7 +53,7 @@ export const menuAdminApi = {
 
     updateMenuItem: async (
         id: number,
-        payload: { name?: string; priceTHB?: number; imageUrl?: string | null }
+        payload: { name?: string; nameEn?: string; priceTHB?: number; imageUrl?: string | null }
     ): Promise<MenuItemAdmin> => {
         return apiClient.patch<MenuItemAdmin>(`/menu/items/${id}`, payload);
     },
