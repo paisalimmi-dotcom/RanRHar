@@ -49,3 +49,23 @@ export const RecordPaymentBodySchema = Type.Object({
     method: Type.Union([Type.Literal('CASH'), Type.Literal('QR')]),
     notes: Type.Optional(Type.String({ maxLength: 500 })),
 });
+
+// Split bill schema
+export const SplitPaymentItemSchema = Type.Object({
+    amount: Type.Number({ minimum: 0.01 }),
+    method: Type.Union([Type.Literal('CASH'), Type.Literal('QR')]),
+    payer: Type.Optional(Type.String({ maxLength: 255 })),
+    notes: Type.Optional(Type.String({ maxLength: 500 })),
+});
+
+export const SplitPaymentBodySchema = Type.Object({
+    payments: Type.Array(SplitPaymentItemSchema, { minItems: 2, maxItems: 10 }),
+});
+
+// Combined bill schema
+export const CombinedPaymentBodySchema = Type.Object({
+    orderIds: Type.Array(Type.String({ pattern: '^[0-9]+$' }), { minItems: 2, maxItems: 10 }),
+    amount: Type.Number({ minimum: 0.01 }),
+    method: Type.Union([Type.Literal('CASH'), Type.Literal('QR')]),
+    notes: Type.Optional(Type.String({ maxLength: 500 })),
+});
