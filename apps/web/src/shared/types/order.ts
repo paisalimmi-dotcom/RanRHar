@@ -6,6 +6,7 @@ export type OrderItem = {
     name: string;
     priceTHB: number;
     quantity: number;
+    modifierIds?: string[]; // Selected modifier IDs
 };
 
 export type OrderStatus = 

@@ -57,4 +57,23 @@ export const menuAdminApi = {
     ): Promise<MenuItemAdmin> => {
         return apiClient.patch<MenuItemAdmin>(`/menu/items/${id}`, payload);
     },
+
+    // Modifiers API
+    createModifier: async (
+        itemId: number,
+        payload: { name: string; nameEn?: string; priceDelta?: number; sortOrder?: number }
+    ): Promise<{ id: number; name: string; nameEn?: string; priceDelta: number; sortOrder: number }> => {
+        return apiClient.post(`/menu/items/${itemId}/modifiers`, payload);
+    },
+
+    updateModifier: async (
+        id: number,
+        payload: { name?: string; nameEn?: string; priceDelta?: number; sortOrder?: number; isActive?: boolean }
+    ): Promise<{ id: number; name: string; nameEn?: string; priceDelta: number; sortOrder: number; isActive: boolean }> => {
+        return apiClient.patch(`/menu/modifiers/${id}`, payload);
+    },
+
+    deleteModifier: async (id: number): Promise<void> => {
+        await apiClient.delete(`/menu/modifiers/${id}`);
+    },
 };

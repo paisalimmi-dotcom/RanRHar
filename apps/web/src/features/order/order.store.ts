@@ -37,12 +37,13 @@ const TABLE_CODE_KEY = 'ranrhar_table_code';
 export async function createOrder(cartItems: CartItem[]): Promise<Order> {
     const subtotal = cartItems.reduce((sum, item) => sum + (item.priceTHB * item.quantity), 0);
 
-    // Transform cart items to order items
+    // Transform cart items to order items (include modifiers)
     const orderItems: OrderItem[] = cartItems.map(item => ({
         id: item.id,
         name: item.name,
         priceTHB: item.priceTHB,
         quantity: item.quantity,
+        modifierIds: item.modifierIds,
     }));
 
     const tableCode = typeof window !== 'undefined' ? sessionStorage.getItem(TABLE_CODE_KEY) : null;
