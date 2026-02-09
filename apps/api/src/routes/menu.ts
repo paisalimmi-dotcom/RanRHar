@@ -114,6 +114,107 @@ export async function menuRoutes(fastify: FastifyInstance) {
         }
     });
 
+    // POST /menu/items/:id/modifiers - Create modifier for menu item (manager only)
+    fastify.post<{
+        Params: { id: string };
+        Body: { name: string; nameEn?: string; priceDelta?: number; sortOrder?: number };
+    }>('/menu/items/:id/modifiers', {
+        preHandler: [authMiddleware, requireRole('manager')],
+    }, async (request, reply) => {
+        const itemId = parseInt(request.params.id, 10);
+        if (isNaN(itemId) || itemId < 1) return reply.status(400).send({ error: 'Invalid item ID' });
+        
+        const { name, nameEn, priceDelta = 0, sortOrder = 999 } = request.body;
+        if (!name || typeof name !== 'string' || name.trim() === '') {
+            return reply.status(400).send({ error: 'Name is required' });
+        }
+        
+        try {
+            const result = await pool.query(
+                `INSERT INTO menu_modifiers (menu_item_id, name, name_en, price_delta, sort_order)
+                 VALUES ($1, $2, $3, $4, $5)
+                 RETURNING id, name, name_en, price_delta as "priceDelta", sort_order`,
+                [itemId, name.trim(), nameEn?.trim() || null, priceDelta, sortOrder]
+            );
+            const row = result.rows[0];
+            return reply.status(201).send({
+                id: row.id,
+                name: row.name,
+                nameEn: row.name_en || undefined,
+                priceDelta: Number(row.priceDelta),
+                sortOrder: row.sort_order,
+            });
+        } catch (error) {
+            request.log.error({ err: error }, 'Create modifier error');
+            return reply.status(500).send({ error: 'Internal server error' });
+        }
+    });
+
+    // PATCH /menu/modifiers/:id - Update modifier (manager only)
+    fastify.patch<{
+        Params: { id: string };
+        Body: { name?: string; nameEn?: string; priceDelta?: number; sortOrder?: number; isActive?: boolean };
+    }>('/menu/modifiers/:id', {
+        preHandler: [authMiddleware, requireRole('manager')],
+    }, async (request, reply) => {
+        const id = parseInt(request.params.id, 10);
+        if (isNaN(id) || id < 1) return reply.status(400).send({ error: 'Invalid modifier ID' });
+        
+        const { name, nameEn, priceDelta, sortOrder, isActive } = request.body;
+        if (!name && nameEn === undefined && priceDelta === undefined && sortOrder === undefined && isActive === undefined) {
+            return reply.status(400).send({ error: 'At least one field required' });
+        }
+        
+        try {
+            const updates: string[] = [];
+            const values: unknown[] = [];
+            let i = 1;
+            if (name !== undefined) { updates.push(`name = $${i++}`); values.push(name.trim()); }
+            if (nameEn !== undefined) { updates.push(`name_en = $${i++}`); values.push(nameEn?.trim() || null); }
+            if (priceDelta !== undefined) { updates.push(`price_delta = $${i++}`); values.push(priceDelta); }
+            if (sortOrder !== undefined) { updates.push(`sort_order = $${i++}`); values.push(sortOrder); }
+            if (isActive !== undefined) { updates.push(`is_active = $${i++}`); values.push(isActive); }
+            values.push(id);
+            
+            const result = await pool.query(
+                `UPDATE menu_modifiers SET ${updates.join(', ')} WHERE id = $${i} RETURNING id, name, name_en, price_delta as "priceDelta", sort_order, is_active as "isActive"`,
+                values
+            );
+            const row = result.rows[0];
+            if (!row) return reply.status(404).send({ error: 'Modifier not found' });
+            return reply.send({
+                id: row.id,
+                name: row.name,
+                nameEn: row.name_en || undefined,
+                priceDelta: Number(row.priceDelta),
+                sortOrder: row.sort_order,
+                isActive: row.isActive,
+            });
+        } catch (error) {
+            request.log.error({ err: error }, 'Update modifier error');
+            return reply.status(500).send({ error: 'Internal server error' });
+        }
+    });
+
+    // DELETE /menu/modifiers/:id - Delete modifier (manager only)
+    fastify.delete<{
+        Params: { id: string };
+    }>('/menu/modifiers/:id', {
+        preHandler: [authMiddleware, requireRole('manager')],
+    }, async (request, reply) => {
+        const id = parseInt(request.params.id, 10);
+        if (isNaN(id) || id < 1) return reply.status(400).send({ error: 'Invalid modifier ID' });
+        
+        try {
+            const result = await pool.query('DELETE FROM menu_modifiers WHERE id = $1 RETURNING id', [id]);
+            if (result.rows.length === 0) return reply.status(404).send({ error: 'Modifier not found' });
+            return reply.status(204).send();
+        } catch (error) {
+            request.log.error({ err: error }, 'Delete modifier error');
+            return reply.status(500).send({ error: 'Internal server error' });
+        }
+    });
+
     // GET /menu/admin - Get full menu for admin (manager only)
     fastify.get('/menu/admin', {
         preHandler: [authMiddleware, requireRole('manager')],
@@ -134,18 +235,40 @@ export async function menuRoutes(fastify: FastifyInstance) {
                          FROM menu_items WHERE category_id = $1 ORDER BY sort_order ASC`,
                         [cat.id]
                     );
+                    
+                    // Fetch modifiers for each item
+                    const itemsWithModifiers = await Promise.all(
+                        itemsResult.rows.map(async (r: { id: number; name: string; name_en: string | null; priceTHB: number; imageUrl: string }) => {
+                            const modifiersResult = await pool.query(
+                                `SELECT id, name, name_en, price_delta as "priceDelta"
+                                 FROM menu_modifiers
+                                 WHERE menu_item_id = $1 AND is_active = true
+                                 ORDER BY sort_order ASC`,
+                                [r.id]
+                            );
+                            
+                            return {
+                                id: r.id,
+                                name: r.name,
+                                nameEn: r.name_en || undefined,
+                                priceTHB: Number(r.priceTHB),
+                                imageUrl: r.imageUrl || undefined,
+                                modifiers: modifiersResult.rows.map((m: { id: number; name: string; name_en: string | null; priceDelta: number }) => ({
+                                    id: m.id,
+                                    name: m.name,
+                                    nameEn: m.name_en || undefined,
+                                    priceDelta: Number(m.priceDelta),
+                                })),
+                            };
+                        })
+                    );
+                    
                     return {
                         id: cat.id,
                         name: cat.name,
                         nameEn: cat.name_en || undefined,
                         sortOrder: cat.sort_order,
-                        items: itemsResult.rows.map((r: { id: number; name: string; name_en: string | null; priceTHB: number; imageUrl: string }) => ({
-                            id: r.id,
-                            name: r.name,
-                            nameEn: r.name_en || undefined,
-                            priceTHB: Number(r.priceTHB),
-                            imageUrl: r.imageUrl || undefined,
-                        })),
+                        items: itemsWithModifiers,
                     };
                 })
             );
@@ -235,15 +358,36 @@ export async function menuRoutes(fastify: FastifyInstance) {
                          ORDER BY sort_order ASC`,
                         [cat.id]
                     );
+                    
+                    // Fetch modifiers for each item
+                    const itemsWithModifiers = await Promise.all(
+                        itemsResult.rows.map(async (r: { id: number; name: string; name_en: string | null; priceTHB: number; imageUrl: string }) => {
+                            const modifiersResult = await pool.query(
+                                `SELECT id, name, name_en, price_delta as "priceDelta"
+                                 FROM menu_modifiers
+                                 WHERE menu_item_id = $1 AND is_active = true
+                                 ORDER BY sort_order ASC`,
+                                [r.id]
+                            );
+                            
+                            return {
+                                id: `m-${r.id}`,
+                                name: isEnglish && r.name_en ? r.name_en : r.name,
+                                priceTHB: Number(r.priceTHB),
+                                imageUrl: r.imageUrl || undefined,
+                                modifiers: modifiersResult.rows.map((m: { id: number; name: string; name_en: string | null; priceDelta: number }) => ({
+                                    id: `mod-${m.id}`,
+                                    name: isEnglish && m.name_en ? m.name_en : m.name,
+                                    priceDelta: Number(m.priceDelta),
+                                })),
+                            };
+                        })
+                    );
+                    
                     return {
                         id: `cat-${cat.id}`,
                         name: isEnglish && cat.name_en ? cat.name_en : cat.name,
-                        items: itemsResult.rows.map((r: { id: number; name: string; name_en: string | null; priceTHB: number; imageUrl: string }) => ({
-                            id: `m-${r.id}`,
-                            name: isEnglish && r.name_en ? r.name_en : r.name,
-                            priceTHB: Number(r.priceTHB),
-                            imageUrl: r.imageUrl || undefined,
-                        })),
+                        items: itemsWithModifiers,
                     };
                 })
             );

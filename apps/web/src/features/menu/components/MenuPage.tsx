@@ -6,6 +6,7 @@ import { CartProvider, useCart, CartSummary } from '../../cart';
 import type { MenuCategory, MenuItem, RestaurantInfo } from '../types';
 import { TableWarningBanner } from '@/components/TableWarningBanner';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { ModifierSelector } from '@/components/ModifierSelector';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 import { menuService } from '../services/menu.service';
 
@@ -199,7 +200,19 @@ function CategorySection({
                 style={{ maxWidth: 1200 }}
             >
                 {displayItems.map((it) => (
-                    <MenuItemCard key={it.id} item={it} onAdd={() => addToCart(it)} />
+                    <MenuItemCard 
+                        key={it.id} 
+                        item={it} 
+                        onAdd={(modifierIds) => {
+                            const cartItem: { id: string; name: string; priceTHB: number; modifierIds?: string[] } = {
+                                id: it.id,
+                                name: it.name,
+                                priceTHB: it.priceTHB,
+                                modifierIds,
+                            };
+                            addToCart(cartItem);
+                        }} 
+                    />
                 ))}
             </div>
             {hasMore && !expanded && (
@@ -224,52 +237,113 @@ function CategorySection({
     );
 }
 
-function MenuItemCard({ item, onAdd }: { item: MenuItem; onAdd: () => void }) {
+function MenuItemCard({ item, onAdd }: { item: MenuItem; onAdd: (modifierIds?: string[]) => void }) {
     const { t } = useI18n();
+    const [showModifierSelector, setShowModifierSelector] = useState(false);
+    const [selectedModifierIds, setSelectedModifierIds] = useState<string[]>([]);
+
+    const hasModifiers = item.modifiers && item.modifiers.length > 0;
+
+    const handleAddClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (hasModifiers) {
+            setShowModifierSelector(true);
+        } else {
+            onAdd();
+        }
+    };
+
+    const handleConfirmModifiers = () => {
+        onAdd(selectedModifierIds);
+        setShowModifierSelector(false);
+        setSelectedModifierIds([]);
+    };
+
+    const modifierPriceDelta = item.modifiers
+        ?.filter(m => selectedModifierIds.includes(m.id))
+        .reduce((sum, m) => sum + m.priceDelta, 0) || 0;
+
+    const displayPrice = item.priceTHB + modifierPriceDelta;
+
     return (
-        <div
-            className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group"
-            role="button"
-            tabIndex={0}
-            onClick={(e) => {
-                if ((e.target as HTMLElement).closest('button')) return;
-                onAdd();
-            }}
-            onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onAdd();
-                }
-            }}
-        >
-            {item.imageUrl ? (
-                <div className="relative w-full aspect-[4/3] bg-gray-100">
-                    <Image
-                        src={item.imageUrl}
-                        alt={item.name}
-                        fill
-                        className="object-cover group-hover:scale-[1.02] transition-transform duration-200"
-                        sizes="(max-width: 768px) 50vw, 33vw"
-                    />
-                </div>
-            ) : (
-                <div className="w-full aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200" />
-            )}
-            <div className="p-4">
-                <div className="font-semibold text-gray-900 text-base mb-2 line-clamp-2">{item.name}</div>
-                <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold text-blue-600">฿{item.priceTHB}</span>
-                    <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); onAdd(); }}
-                        className="px-4 py-2 rounded-xl bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 active:scale-95 transition-all"
-                        aria-label={`${t('common.add')} ${item.name}`}
-                    >
-                        {t('common.add')}
-                    </button>
+        <>
+            <div
+                className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group"
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                    if ((e.target as HTMLElement).closest('button')) return;
+                    if (hasModifiers) {
+                        setShowModifierSelector(true);
+                    } else {
+                        onAdd();
+                    }
+                }}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        if (hasModifiers) {
+                            setShowModifierSelector(true);
+                        } else {
+                            onAdd();
+                        }
+                    }
+                }}
+            >
+                {item.imageUrl ? (
+                    <div className="relative w-full aspect-[4/3] bg-gray-100">
+                        <Image
+                            src={item.imageUrl}
+                            alt={item.name}
+                            fill
+                            className="object-cover group-hover:scale-[1.02] transition-transform duration-200"
+                            sizes="(max-width: 768px) 50vw, 33vw"
+                        />
+                    </div>
+                ) : (
+                    <div className="w-full aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200" />
+                )}
+                <div className="p-4">
+                    <div className="font-semibold text-gray-900 text-base mb-2 line-clamp-2">{item.name}</div>
+                    {hasModifiers && (
+                        <div className="text-xs text-gray-500 mb-2">
+                            มีตัวเลือกเพิ่มเติม ({item.modifiers!.length} ตัวเลือก)
+                        </div>
+                    )}
+                    <div className="flex justify-between items-center">
+                        <span className="text-lg font-bold text-blue-600">
+                            ฿{displayPrice.toFixed(2)}
+                            {modifierPriceDelta !== 0 && (
+                                <span className="text-xs text-gray-500 ml-1">
+                                    ({modifierPriceDelta > 0 ? '+' : ''}฿{modifierPriceDelta.toFixed(2)})
+                                </span>
+                            )}
+                        </span>
+                        <button
+                            type="button"
+                            onClick={handleAddClick}
+                            className="px-4 py-2 rounded-xl bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 active:scale-95 transition-all"
+                            aria-label={`${t('common.add')} ${item.name}`}
+                        >
+                            {hasModifiers ? 'เลือกตัวเลือก' : t('common.add')}
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
+
+            {showModifierSelector && item.modifiers && (
+                <ModifierSelector
+                    modifiers={item.modifiers}
+                    selectedIds={selectedModifierIds}
+                    onSelectionChange={setSelectedModifierIds}
+                    onClose={() => {
+                        setShowModifierSelector(false);
+                        setSelectedModifierIds([]);
+                    }}
+                    onConfirm={handleConfirmModifiers}
+                />
+            )}
+        </>
     );
 }
 

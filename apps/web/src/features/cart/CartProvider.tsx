@@ -31,16 +31,29 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
     }, [items, isInitialized]);
 
-    const addToCart = useCallback((product: { id: string; name: string; priceTHB: number }) => {
-        // ... existing methods ...
+    const addToCart = useCallback((product: { id: string; name: string; priceTHB: number; modifierIds?: string[] }) => {
         setItems((prev) => {
-            const existing = prev.find((i) => i.id === product.id);
+            // Check if exact same item with same modifiers exists
+            const existing = prev.find((i) => 
+                i.id === product.id && 
+                JSON.stringify(i.modifierIds?.sort()) === JSON.stringify(product.modifierIds?.sort())
+            );
             if (existing) {
                 return prev.map((i) =>
-                    i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
+                    i.id === product.id && JSON.stringify(i.modifierIds?.sort()) === JSON.stringify(product.modifierIds?.sort())
+                        ? { ...i, quantity: i.quantity + 1 }
+                        : i
                 );
             }
-            return [...prev, { ...product, quantity: 1 }];
+            return [...prev, { ...product, quantity: 1, modifierIds: product.modifierIds || [] }];
+        });
+    }, []);
+
+    const updateItemModifiers = useCallback((itemId: string, modifierIds: string[]) => {
+        setItems((prev) => {
+            return prev.map((i) => 
+                i.id === itemId ? { ...i, modifierIds } : i
+            );
         });
     }, []);
 
@@ -69,13 +82,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const value = useMemo(() => ({
         items,
         addToCart,
+        updateItemModifiers,
         decreaseQuantity,
         removeItem,
         clearCart,
         totalItems,
-        totalPrice,
+        totalPrice, // Note: This doesn't include modifier prices - will be calculated at checkout
         isInitialized,
-    }), [items, addToCart, decreaseQuantity, removeItem, clearCart, totalItems, totalPrice, isInitialized]);
+    }), [items, addToCart, updateItemModifiers, decreaseQuantity, removeItem, clearCart, totalItems, totalPrice, isInitialized]);
 
     return (
         <CartContext.Provider value={value}>
