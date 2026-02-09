@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { pool } from '../db';
+import { ApiError, Errors } from '../lib/errors';
 import { authMiddleware, requireRole } from '../middleware/auth';
 
 export async function menuRoutes(fastify: FastifyInstance) {
@@ -11,7 +12,7 @@ export async function menuRoutes(fastify: FastifyInstance) {
     }, async (request, reply) => {
         const { name, nameEn, sortOrder = 999 } = request.body;
         if (!name || typeof name !== 'string' || name.trim() === '') {
-            return reply.status(400).send({ error: 'Name is required' });
+            throw Errors.validation.required('name');
         }
         try {
             const result = await pool.query(
@@ -35,10 +36,10 @@ export async function menuRoutes(fastify: FastifyInstance) {
         preHandler: [authMiddleware, requireRole('manager')],
     }, async (request, reply) => {
         const id = parseInt(request.params.id, 10);
-        if (isNaN(id) || id < 1) return reply.status(400).send({ error: 'Invalid category ID' });
+        if (isNaN(id) || id < 1) throw Errors.validation.invalidId(request.params.id);
         const { name, sortOrder } = request.body;
         if (!name && sortOrder === undefined) {
-            return reply.status(400).send({ error: 'At least one field required: name, sortOrder' });
+            throw Errors.validation.required('name or sortOrder');
         }
         try {
             const updates: string[] = [];
@@ -52,11 +53,14 @@ export async function menuRoutes(fastify: FastifyInstance) {
                 values
             );
             const row = result.rows[0];
-            if (!row) return reply.status(404).send({ error: 'Category not found' });
+            if (!row) throw Errors.menu.categoryNotFound(id.toString());
             return reply.send({ id: row.id, name: row.name, sortOrder: row.sort_order ?? 999 });
         } catch (error) {
             request.log.error({ err: error }, 'Update category error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to update category');
         }
     });
 
@@ -67,19 +71,22 @@ export async function menuRoutes(fastify: FastifyInstance) {
         preHandler: [authMiddleware, requireRole('manager')],
     }, async (request, reply) => {
         const id = parseInt(request.params.id, 10);
-        if (isNaN(id) || id < 1) return reply.status(400).send({ error: 'Invalid category ID' });
+        if (isNaN(id) || id < 1) throw Errors.validation.invalidId(request.params.id);
         try {
             const countResult = await pool.query(
                 'SELECT COUNT(*)::int as cnt FROM menu_items WHERE category_id = $1', [id]
             );
             if (countResult.rows[0]?.cnt > 0) {
-                return reply.status(400).send({ error: 'Cannot delete category that has menu items. Move or delete items first.' });
+                throw Errors.menu.categoryHasItems(id.toString());
             }
             await pool.query('DELETE FROM menu_categories WHERE id = $1', [id]);
             return reply.status(204).send();
         } catch (error) {
             request.log.error({ err: error }, 'Delete category error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to delete category');
         }
     });
 
@@ -91,7 +98,10 @@ export async function menuRoutes(fastify: FastifyInstance) {
     }, async (request, reply) => {
         const { categoryId, name, nameEn, priceTHB, imageUrl } = request.body;
         if (!categoryId || !name || typeof priceTHB !== 'number') {
-            return reply.status(400).send({ error: 'categoryId, name, priceTHB required' });
+            throw Errors.validation.required('categoryId, name, priceTHB');
+        }
+        if (priceTHB < 0 || priceTHB > 999999) {
+            throw Errors.menu.invalidPrice(priceTHB);
         }
         try {
             const result = await pool.query(
@@ -110,7 +120,10 @@ export async function menuRoutes(fastify: FastifyInstance) {
             });
         } catch (error) {
             request.log.error({ err: error }, 'Create menu item error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to create menu item');
         }
     });
 
@@ -146,7 +159,10 @@ export async function menuRoutes(fastify: FastifyInstance) {
             });
         } catch (error) {
             request.log.error({ err: error }, 'Create modifier error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to create modifier');
         }
     });
 
@@ -181,7 +197,7 @@ export async function menuRoutes(fastify: FastifyInstance) {
                 values
             );
             const row = result.rows[0];
-            if (!row) return reply.status(404).send({ error: 'Modifier not found' });
+            if (!row) throw Errors.menu.modifierNotFound(id.toString());
             return reply.send({
                 id: row.id,
                 name: row.name,
@@ -192,7 +208,10 @@ export async function menuRoutes(fastify: FastifyInstance) {
             });
         } catch (error) {
             request.log.error({ err: error }, 'Update modifier error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to update modifier');
         }
     });
 
@@ -226,7 +245,7 @@ export async function menuRoutes(fastify: FastifyInstance) {
             ]);
             const restaurant = restaurantResult.rows[0];
             const categories = categoriesResult.rows;
-            if (!restaurant) return reply.status(404).send({ error: 'Restaurant not found' });
+            if (!restaurant) throw Errors.system.internal('Restaurant configuration not found');
 
             const categoriesWithItems = await Promise.all(
                 categories.map(async (cat: { id: number; name: string; name_en: string | null; sort_order: number }) => {
@@ -309,7 +328,7 @@ export async function menuRoutes(fastify: FastifyInstance) {
                 values
             );
             const row = result.rows[0];
-            if (!row) return reply.status(404).send({ error: 'Menu item not found' });
+            if (!row) throw Errors.menu.itemNotFound(id.toString());
             return reply.send({
                 id: row.id,
                 name: row.name,
@@ -319,7 +338,10 @@ export async function menuRoutes(fastify: FastifyInstance) {
             });
         } catch (error) {
             request.log.error({ err: error }, 'Update menu item error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to update menu item');
         }
     });
 
@@ -402,7 +424,10 @@ export async function menuRoutes(fastify: FastifyInstance) {
             });
         } catch (error) {
             request.log.error({ err: error }, 'Get menu error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to retrieve menu');
         }
     });
 }

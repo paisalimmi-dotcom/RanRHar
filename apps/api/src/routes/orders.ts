@@ -4,6 +4,7 @@ import { Type } from '@sinclair/typebox';
 import { pool } from '../db';
 import { auditLog } from '../lib/audit';
 import { incrementOrders } from '../lib/metrics';
+import { ApiError, Errors } from '../lib/errors';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import {
     CancelOrderBodySchema,
@@ -123,6 +124,11 @@ export async function orderRoutes(fastify: FastifyInstance) {
         },
     }, async (request, reply) => {
         const { id } = request.params as { id: string };
+        const orderId = parseInt(id, 10);
+        if (isNaN(orderId) || orderId < 1) {
+            throw Errors.validation.invalidId(id);
+        }
+
         const { tableCode } = request.query as { tableCode?: string };
 
         try {
@@ -130,18 +136,18 @@ export async function orderRoutes(fastify: FastifyInstance) {
                 `SELECT o.id, o.items, o.total, o.status, o.created_at, o.created_by, o.table_code
                  FROM orders o
                  WHERE o.id = $1`,
-                [id]
+                [orderId]
             );
 
             if (result.rows.length === 0) {
-                return reply.status(404).send({ error: 'Order not found' });
+                throw Errors.order.notFound(id);
             }
 
             const order = result.rows[0];
 
             // Verify table code if provided
             if (tableCode && order.table_code && order.table_code !== tableCode) {
-                return reply.status(403).send({ error: 'Order does not belong to this table' });
+                throw Errors.auth.insufficientPermissions('Order does not belong to this table');
             }
 
             return reply.send({
@@ -155,7 +161,10 @@ export async function orderRoutes(fastify: FastifyInstance) {
             });
         } catch (error) {
             request.log.error({ err: error }, 'Get public order error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to retrieve order');
         }
     });
 
@@ -175,14 +184,13 @@ export async function orderRoutes(fastify: FastifyInstance) {
         const { items, total, tableCode } = request.body as { items: OrderItem[]; total: number; tableCode?: string };
 
         if (!validateOrderTotal(items, total)) {
-            return reply.status(400).send({
-                error: 'Order total does not match sum of items. Recalculate and try again.',
-            });
+            const expectedTotal = items.reduce((sum, i) => sum + i.priceTHB * i.quantity, 0);
+            throw Errors.order.invalidTotal(expectedTotal, total);
         }
 
         const menuValidation = await validateItemsAgainstMenu(items);
         if (!menuValidation.valid) {
-            return reply.status(400).send({ error: menuValidation.error });
+            throw Errors.order.invalidItems(menuValidation.error || 'Invalid items');
         }
 
         const body = { items, total, tableCode };
@@ -214,10 +222,13 @@ export async function orderRoutes(fastify: FastifyInstance) {
                         tableCode: tableCode || null,
                     },
                 };
-            } catch (error) {
-                request.log.error({ err: error }, 'Create guest order error');
-                return { status: 500, body: { error: 'Internal server error' } };
+        } catch (error) {
+            request.log.error({ err: error }, 'Create guest order error');
+            if (error instanceof ApiError) {
+                throw error;
             }
+            throw Errors.system.internal('Failed to create order');
+        }
         }
 
         const result = idempotencyKey && /^[a-zA-Z0-9_-]{1,64}$/.test(idempotencyKey)
@@ -244,7 +255,7 @@ export async function orderRoutes(fastify: FastifyInstance) {
 
         const menuValidation = await validateItemsAgainstMenu(items);
         if (!menuValidation.valid) {
-            return reply.status(400).send({ error: menuValidation.error });
+            throw Errors.order.invalidItems(menuValidation.error || 'Invalid items');
         }
 
         try {
@@ -270,7 +281,10 @@ export async function orderRoutes(fastify: FastifyInstance) {
             });
         } catch (error) {
             request.log.error({ err: error }, 'Create order error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to create order');
         }
     });
 
@@ -314,7 +328,10 @@ export async function orderRoutes(fastify: FastifyInstance) {
             return reply.send({ orders });
         } catch (error) {
             request.log.error({ err: error }, 'Get orders error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to retrieve orders');
         }
     });
 
@@ -327,6 +344,11 @@ export async function orderRoutes(fastify: FastifyInstance) {
         },
     }, async (request, reply) => {
         const { id } = request.params as { id: string };
+        const orderId = parseInt(id, 10);
+        if (isNaN(orderId) || orderId < 1) {
+            throw Errors.validation.invalidId(id);
+        }
+
         const { status } = request.body as { status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'NEW' | 'ACCEPTED' | 'COOKING' | 'READY' | 'SERVED' };
 
         try {
@@ -334,11 +356,11 @@ export async function orderRoutes(fastify: FastifyInstance) {
             if (status === 'CANCELLED') {
                 const orderResult = await pool.query(
                     `SELECT status, created_by FROM orders WHERE id = $1`,
-                    [id]
+                    [orderId]
                 );
 
                 if (orderResult.rows.length === 0) {
-                    return reply.status(404).send({ error: 'Order not found' });
+                    throw Errors.order.notFound(id);
                 }
 
                 const order = orderResult.rows[0];
@@ -347,16 +369,16 @@ export async function orderRoutes(fastify: FastifyInstance) {
                 // Check if order has payment
                 const paymentResult = await pool.query(
                     `SELECT id FROM payments WHERE order_id = $1 AND status = 'PAID'`,
-                    [id]
+                    [orderId]
                 );
 
                 if (paymentResult.rows.length > 0) {
-                    return reply.status(400).send({ error: 'Cannot cancel paid order. Refund required.' });
+                    throw Errors.payment.requiresRefund(id);
                 }
 
                 // Only PENDING can be cancelled by anyone, CONFIRMED/COMPLETED only by manager
                 if (order.status !== 'PENDING' && userRole !== 'manager') {
-                    return reply.status(403).send({ error: 'Only manager can cancel CONFIRMED or COMPLETED orders' });
+                    throw Errors.order.cannotCancel('Only manager can cancel CONFIRMED or COMPLETED orders');
                 }
             }
 
@@ -365,7 +387,7 @@ export async function orderRoutes(fastify: FastifyInstance) {
                  SET status = $1 
                  WHERE id = $2 
                  RETURNING id, items, total, status, created_at, created_by, table_code`,
-                [status, id]
+                [status, orderId]
             );
 
             if (result.rows.length === 0) {
@@ -373,7 +395,7 @@ export async function orderRoutes(fastify: FastifyInstance) {
             }
 
             const order = result.rows[0];
-            await auditLog({ action: 'order.status_update', entityType: 'order', entityId: id, actorId: request.user!.userId, actorEmail: request.user!.email, metadata: { status } });
+            await auditLog({ action: 'order.status_update', entityType: 'order', entityId: orderId.toString(), actorId: request.user!.userId, actorEmail: request.user!.email, metadata: { status } });
 
             return reply.send({
                 id: order.id.toString(),
@@ -387,7 +409,10 @@ export async function orderRoutes(fastify: FastifyInstance) {
             });
         } catch (error) {
             request.log.error({ err: error }, 'Update order status error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to update order status');
         }
     });
 
@@ -400,17 +425,22 @@ export async function orderRoutes(fastify: FastifyInstance) {
         },
     }, async (request, reply) => {
         const { id } = request.params as { id: string };
+        const orderId = parseInt(id, 10);
+        if (isNaN(orderId) || orderId < 1) {
+            throw Errors.validation.invalidId(id);
+        }
+
         const { reason, refundRequired } = request.body as { reason?: string; refundRequired?: boolean };
 
         try {
             // Get current order status
             const orderResult = await pool.query(
                 `SELECT status, created_by FROM orders WHERE id = $1`,
-                [id]
+                [orderId]
             );
 
             if (orderResult.rows.length === 0) {
-                return reply.status(404).send({ error: 'Order not found' });
+                throw Errors.order.notFound(id);
             }
 
             const order = orderResult.rows[0];
@@ -418,11 +448,11 @@ export async function orderRoutes(fastify: FastifyInstance) {
             // Check if order has payment
             const paymentResult = await pool.query(
                 `SELECT id FROM payments WHERE order_id = $1 AND status = 'PAID'`,
-                [id]
+                [orderId]
             );
 
             if (paymentResult.rows.length > 0 && !refundRequired) {
-                return reply.status(400).send({ error: 'Paid order requires refund. Set refundRequired=true' });
+                throw Errors.payment.requiresRefund(id);
             }
 
             // Cancel the order
@@ -435,14 +465,14 @@ export async function orderRoutes(fastify: FastifyInstance) {
                      refund_required = $3
                  WHERE id = $4
                  RETURNING id, items, total, status, created_at, created_by, table_code, cancelled_at, cancel_reason, refund_required`,
-                [request.user!.userId, reason || null, refundRequired || false, id]
+                [request.user!.userId, reason || null, refundRequired || false, orderId]
             );
 
             const cancelledOrder = result.rows[0];
             await auditLog({ 
                 action: 'order.cancel', 
                 entityType: 'order', 
-                entityId: id, 
+                entityId: orderId.toString(), 
                 actorId: request.user!.userId, 
                 actorEmail: request.user!.email, 
                 metadata: { reason, refundRequired, previousStatus: order.status } 
@@ -463,7 +493,10 @@ export async function orderRoutes(fastify: FastifyInstance) {
             });
         } catch (error) {
             request.log.error({ err: error }, 'Cancel order error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to cancel order');
         }
     });
 }

@@ -8,6 +8,7 @@ import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import cookie from '@fastify/cookie';
 import { getMetrics, incrementRequests } from './lib/metrics';
+import { ApiError, ApiErrorResponse, ErrorCode, Errors } from './lib/errors';
 import { authRoutes } from './routes/auth';
 import { orderRoutes } from './routes/orders';
 import { paymentRoutes } from './routes/payments';
@@ -110,32 +111,86 @@ async function start() {
             });
         }
 
-        // Security: Custom error handler (hide stack traces in production)
+        // Security: Custom error handler with typed error codes (Olympic Standard)
         fastify.setErrorHandler((error, request, reply) => {
-            if (IS_PRODUCTION) {
-                // Log error internally
+            const requestId = request.id;
+
+            // Handle ApiError (typed errors)
+            if (error instanceof ApiError) {
                 fastify.log.error({
-                    error: error.message,
-                    stack: error.stack,
+                    error: {
+                        code: error.code,
+                        message: error.message,
+                        details: error.details,
+                    },
+                    requestId,
                     url: request.url,
                     method: request.method,
                 });
 
-                // Send generic error to client
-                reply.status(error.statusCode || 500).send({
-                    statusCode: error.statusCode || 500,
-                    error: 'Internal Server Error',
-                    message: 'Something went wrong',
+                const response: ApiErrorResponse = {
+                    error: {
+                        code: error.code,
+                        message: error.message,
+                        details: IS_PRODUCTION ? undefined : error.details,
+                        requestId,
+                    },
+                };
+
+                return reply.status(error.statusCode).send(response);
+            }
+
+            // Handle validation errors from Fastify/TypeBox
+            if (error.validation) {
+                const validationError = Errors.validation.invalidFormat('request', 'valid format');
+                fastify.log.warn({
+                    error: {
+                        code: validationError.code,
+                        message: 'Validation error',
+                        validation: error.validation,
+                    },
+                    requestId,
+                    url: request.url,
+                    method: request.method,
                 });
-            } else {
-                // Development: send full error details
-                reply.status(error.statusCode || 500).send({
-                    statusCode: error.statusCode || 500,
-                    error: error.name,
-                    message: error.message,
-                    stack: error.stack,
+
+                return reply.status(400).send({
+                    error: {
+                        code: validationError.code,
+                        message: 'Request validation failed',
+                        details: IS_PRODUCTION ? undefined : { validation: error.validation },
+                        requestId,
+                    },
                 });
             }
+
+            // Handle rate limit errors
+            if (error.statusCode === 429) {
+                return reply.status(429).send(Errors.system.rateLimit().toJSON());
+            }
+
+            // Handle unknown errors
+            fastify.log.error({
+                error: {
+                    name: error.name,
+                    message: error.message,
+                    stack: IS_PRODUCTION ? undefined : error.stack,
+                },
+                requestId,
+                url: request.url,
+                method: request.method,
+            });
+
+            const response: ApiErrorResponse = {
+                error: {
+                    code: ErrorCode.INTERNAL_ERROR,
+                    message: IS_PRODUCTION ? 'Internal server error' : error.message,
+                    details: IS_PRODUCTION ? undefined : { type: error.name },
+                    requestId,
+                },
+            };
+
+            return reply.status(error.statusCode || 500).send(response);
         });
 
         // Register routes under /v1 prefix (API versioning)
