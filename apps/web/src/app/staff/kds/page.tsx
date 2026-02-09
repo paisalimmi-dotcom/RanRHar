@@ -74,7 +74,7 @@ function KDSContent() {
                         disabled={loading}
                         className="px-3 py-1 bg-gray-700 rounded text-sm hover:bg-gray-600 disabled:opacity-50"
                     >
-                        {loading ? '...' : 'Refresh'}
+                        {loading ? '...' : 'รีเฟรช'}
                     </button>
                 </div>
             </header>

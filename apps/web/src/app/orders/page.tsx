@@ -48,7 +48,7 @@ export default function OrdersPage() {
             const data = await orderApi.getOrders()
             setOrders(data)
         } catch (error) {
-            setError(error instanceof Error ? error.message : 'Failed to load orders')
+                                            setError(error instanceof Error ? error.message : 'ไม่สามารถโหลดออเดอร์ได้')
         } finally {
             setLoading(false)
         }
@@ -70,7 +70,7 @@ export default function OrdersPage() {
             await orderApi.updateOrderStatus(orderId, newStatus)
         } catch (error) {
             // Revert on error
-            setError(error instanceof Error ? error.message : 'Failed to update status')
+            setError(error instanceof Error ? error.message : 'ไม่สามารถอัปเดตสถานะได้')
             await loadOrders()
         } finally {
             setUpdatingOrderId(null)
@@ -139,9 +139,9 @@ export default function OrdersPage() {
                 <div className="max-w-6xl mx-auto p-8">
                     <div className="flex justify-between items-center mb-6">
                         <div>
-                            <h2 className="text-2xl font-bold">Order Management</h2>
+                            <h2 className="text-2xl font-bold">จัดการออเดอร์</h2>
                             <p className="text-sm text-gray-600 mt-1">
-                                Showing {filteredOrders.length} of {orders.length} orders
+                                แสดง {filteredOrders.length} จาก {orders.length} ออเดอร์
                             </p>
                         </div>
                         <div className="flex gap-3 items-center">
@@ -150,17 +150,17 @@ export default function OrdersPage() {
                                 onChange={(e) => setStatusFilter(e.target.value as OrderStatus | 'ALL')}
                                 className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
-                                <option value="ALL">All Orders ({statusCounts.ALL})</option>
-                                <option value="PENDING">Pending ({statusCounts.PENDING})</option>
-                                <option value="CONFIRMED">Confirmed ({statusCounts.CONFIRMED})</option>
-                                <option value="COMPLETED">Completed ({statusCounts.COMPLETED})</option>
+                                <option value="ALL">ทั้งหมด ({statusCounts.ALL})</option>
+                                <option value="PENDING">รอทำ ({statusCounts.PENDING})</option>
+                                <option value="CONFIRMED">กำลังทำ ({statusCounts.CONFIRMED})</option>
+                                <option value="COMPLETED">เสร็จแล้ว ({statusCounts.COMPLETED})</option>
                             </select>
                             <button
                                 onClick={loadOrders}
                                 disabled={loading}
                                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                             >
-                                {loading ? 'Loading...' : 'Refresh'}
+                                {loading ? 'กำลังโหลด...' : 'รีเฟรช'}
                             </button>
                         </div>
                     </div>
@@ -188,25 +188,25 @@ export default function OrdersPage() {
                                 <thead className="bg-gray-100 border-b">
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                            Order ID
+                                            เลขออเดอร์
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                                             โต๊ะ
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                            Items
+                                            รายการ
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                            Total
+                                            รวม
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                            Status
+                                            สถานะ
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                            Payment
+                                            การชำระเงิน
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                            Created
+                                            สร้างเมื่อ
                                         </th>
                                     </tr>
                                 </thead>
@@ -226,7 +226,7 @@ export default function OrdersPage() {
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-700">
-                                                {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+                                                {order.items.length} รายการ
                                                 <div className="text-xs text-gray-500 mt-1">
                                                     {order.items.map(item => `${item.name} (×${item.quantity})`).join(', ')}
                                                 </div>
@@ -241,29 +241,29 @@ export default function OrdersPage() {
                                                     disabled={updatingOrderId === order.id}
                                                     className={`px-3 py-1 rounded-full text-xs font-semibold border ${STATUS_COLORS[order.status]} disabled:opacity-50 cursor-pointer`}
                                                 >
-                                                    <option value="PENDING">PENDING</option>
-                                                    <option value="CONFIRMED">CONFIRMED</option>
-                                                    <option value="COMPLETED">COMPLETED</option>
-                                                    <option value="CANCELLED">CANCELLED</option>
+                                                    <option value="PENDING">รอทำ</option>
+                                                    <option value="CONFIRMED">กำลังทำ</option>
+                                                    <option value="COMPLETED">เสร็จแล้ว</option>
+                                                    <option value="CANCELLED">ยกเลิกแล้ว</option>
                                                 </select>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 {order.payment ? (
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-green-600 font-semibold text-sm">✓ PAID</span>
-                                                        <span className="text-xs text-gray-500">({order.payment.method})</span>
+                                                        <span className="text-green-600 font-semibold text-sm">✓ จ่ายแล้ว</span>
+                                                        <span className="text-xs text-gray-500">({order.payment.method === 'CASH' ? 'เงินสด' : 'QR'})</span>
                                                     </div>
                                                 ) : (
                                                     <button
                                                         onClick={() => setPaymentModal({ orderId: order.id, total: order.total })}
                                                         className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
                                                     >
-                                                        Record
+                                                            บันทึก
                                                     </button>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {new Date(order.createdAt).toLocaleString('en-US', {
+                                                {new Date(order.createdAt).toLocaleString('th-TH', {
                                                     year: 'numeric',
                                                     month: 'short',
                                                     day: 'numeric',

@@ -88,7 +88,7 @@ function CheckoutContent() {
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
             }}>
                 <h1 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '24px' }}>
-                    Checkout
+                    สั่งอาหาร
                 </h1>
 
                 {orderError && (
@@ -100,7 +100,7 @@ function CheckoutContent() {
                 {/* Order Items */}
                 <div style={{ marginBottom: '24px' }}>
                     <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#666' }}>
-                        Order Summary
+                        สรุปรายการ
                     </h2>
                     {items.map((item) => (
                         <div
@@ -138,7 +138,7 @@ function CheckoutContent() {
                         justifyContent: 'space-between',
                         marginBottom: '8px'
                     }}>
-                        <span style={{ fontSize: '14px', color: '#666' }}>Subtotal</span>
+                        <span style={{ fontSize: '14px', color: '#666' }}>ยอดรวม</span>
                         <span style={{ fontWeight: '600' }}>฿{totalPrice}</span>
                     </div>
                     <div style={{
@@ -147,7 +147,7 @@ function CheckoutContent() {
                         fontSize: '20px',
                         fontWeight: '700'
                     }}>
-                        <span>Total</span>
+                        <span>รวมทั้งหมด</span>
                         <span>฿{totalPrice}</span>
                     </div>
                 </div>
@@ -174,7 +174,7 @@ function CheckoutContent() {
                     onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 >
-                    {isPlacingOrder ? 'Placing Order...' : 'Place Order'}
+                    {isPlacingOrder ? 'กำลังสั่งอาหาร...' : 'สั่งอาหาร'}
                 </button>
 
                 {/* Back Link */}
@@ -193,7 +193,7 @@ function CheckoutContent() {
                             textDecoration: 'underline'
                         }}
                     >
-                        ← Back to Menu
+                        ← กลับไปเมนู
                     </button>
                 </div>
             </div>

@@ -32,10 +32,10 @@ export default function OrderSuccessPage() {
                 }}>
                     <div style={{ fontSize: '48px', marginBottom: '16px' }}>❌</div>
                     <h1 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '12px' }}>
-                        Order Not Found
+                        ไม่พบออเดอร์
                     </h1>
                     <p style={{ color: '#666', marginBottom: '24px' }}>
-                        The order you&apos;re looking for doesn&apos;t exist or has been removed.
+                        ออเดอร์ที่คุณค้นหาอาจถูกลบหรือไม่ถูกต้อง
                     </p>
                     <button
                         onClick={() => router.push('/menu/A12')}
@@ -50,7 +50,7 @@ export default function OrderSuccessPage() {
                             cursor: 'pointer'
                         }}
                     >
-                        Back to Menu
+                        กลับไปเมนู
                     </button>
                 </div>
             </div>
@@ -58,12 +58,12 @@ export default function OrderSuccessPage() {
     }
 
     const orderDate = new Date(order.createdAt);
-    const formattedDate = orderDate.toLocaleDateString('en-US', {
+    const formattedDate = orderDate.toLocaleDateString('th-TH', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
     });
-    const formattedTime = orderDate.toLocaleTimeString('en-US', {
+    const formattedTime = orderDate.toLocaleTimeString('th-TH', {
         hour: '2-digit',
         minute: '2-digit'
     });
@@ -86,10 +86,10 @@ export default function OrderSuccessPage() {
                 <div style={{ textAlign: 'center', marginBottom: '24px' }}>
                     <div style={{ fontSize: '64px', marginBottom: '16px' }}>✅</div>
                     <h1 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '8px' }}>
-                        Order Confirmed!
+                        สั่งอาหารสำเร็จ!
                     </h1>
                     <p style={{ color: '#666', fontSize: '14px' }}>
-                        Order ID: <span style={{ fontFamily: 'monospace', fontWeight: '600' }}>{order.id}</span>
+                        เลขออเดอร์: <span style={{ fontFamily: 'monospace', fontWeight: '600' }}>{order.id}</span>
                     </p>
                 </div>
 
@@ -101,7 +101,7 @@ export default function OrderSuccessPage() {
                     marginBottom: '24px'
                 }}>
                     <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
-                        Order placed on
+                        สั่งเมื่อ
                     </div>
                     <div style={{ fontWeight: '600', fontSize: '14px' }}>
                         {formattedDate} at {formattedTime}
@@ -111,7 +111,7 @@ export default function OrderSuccessPage() {
                 {/* Order Items */}
                 <div style={{ marginBottom: '24px' }}>
                     <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#666' }}>
-                        Order Items
+                        รายการอาหาร
                     </h2>
                     {order.items.map((item) => (
                         <div
@@ -150,7 +150,7 @@ export default function OrderSuccessPage() {
                         fontSize: '20px',
                         fontWeight: '700'
                     }}>
-                        <span>Total</span>
+                        <span>รวมทั้งหมด</span>
                         <span>฿{order.total}</span>
                     </div>
                 </div>
@@ -204,7 +204,7 @@ export default function OrderSuccessPage() {
                     onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 >
-                    Back to Menu
+                    กลับไปเมนู
                 </button>
             </div>
         </div>
