@@ -8,10 +8,12 @@ import type { Order, OrderStatus } from '@/shared/types/order'
 import { PaymentModal } from '@/features/payment/components/PaymentModal'
 import { paymentApi } from '@/features/payment/payment.api'
 import type { PaymentMethod } from '@/shared/types/payment'
+import { CancelOrderModal } from '@/components/CancelOrderModal'
 import { useEffect, useState } from 'react'
 
 const CAN_UPDATE_STATUS: import('@/features/auth/auth.types').Role[] = ['manager', 'staff', 'chef']
 const CAN_RECORD_PAYMENT: import('@/features/auth/auth.types').Role[] = ['manager', 'staff', 'cashier']
+const CAN_CANCEL_ORDER: import('@/features/auth/auth.types').Role[] = ['manager']
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
     PENDING: 'bg-yellow-100 text-yellow-800 border-yellow-300',
@@ -24,6 +26,8 @@ export default function OrdersPage() {
     const role = authStore.getSession()?.role
     const canUpdateStatus = role && CAN_UPDATE_STATUS.includes(role)
     const canRecordPayment = role && CAN_RECORD_PAYMENT.includes(role)
+    const canCancelOrder = role && CAN_CANCEL_ORDER.includes(role)
+    const isManager = role === 'manager'
 
     const [orders, setOrders] = useState<Order[]>([])
     const [loading, setLoading] = useState(true)
@@ -31,6 +35,7 @@ export default function OrdersPage() {
     const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null)
     const [statusFilter, setStatusFilter] = useState<OrderStatus | 'ALL'>('ALL')
     const [paymentModal, setPaymentModal] = useState<{ orderId: string; total: number } | null>(null)
+    const [cancelModal, setCancelModal] = useState<{ orderId: string; orderStatus: OrderStatus } | null>(null)
 
     useEffect(() => {
         loadOrders()
@@ -84,6 +89,29 @@ export default function OrdersPage() {
         // Refresh orders to get updated payment (included in GET /orders)
         await loadOrders()
         setPaymentModal(null)
+    }
+
+    async function handleCancelOrder(reason?: string, refundRequired?: boolean) {
+        if (!cancelModal) return
+
+        try {
+            const order = orders.find(o => o.id === cancelModal.orderId)
+            if (!order) return
+
+            // For PENDING orders, use status update
+            if (cancelModal.orderStatus === 'PENDING') {
+                await orderApi.updateOrderStatus(cancelModal.orderId, 'CANCELLED')
+            } else {
+                // For CONFIRMED/COMPLETED, use cancel endpoint (requires manager)
+                await orderApi.cancelOrder(cancelModal.orderId, reason, refundRequired)
+            }
+
+            // Refresh orders
+            await loadOrders()
+            setCancelModal(null)
+        } catch (error) {
+            throw error // Let modal handle error display
+        }
     }
 
     // Filter orders based on selected status
@@ -258,6 +286,17 @@ export default function OrdersPage() {
                         isOpen={true}
                         onClose={() => setPaymentModal(null)}
                         onConfirm={handleRecordPayment}
+                    />
+                )}
+
+                {cancelModal && (
+                    <CancelOrderModal
+                        isOpen={true}
+                        orderId={cancelModal.orderId}
+                        orderStatus={cancelModal.orderStatus}
+                        isManager={isManager}
+                        onConfirm={handleCancelOrder}
+                        onCancel={() => setCancelModal(null)}
                     />
                 )}
             </div>

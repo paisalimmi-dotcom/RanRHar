@@ -155,9 +155,39 @@ export default function OrderSuccessPage() {
                     </div>
                 </div>
 
+                {/* Actions */}
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                    <button
+                        onClick={() => {
+                            const tableCode = order.tableCode || 'A12';
+                            router.push(`/order/status/${order.id}?table=${tableCode}`);
+                        }}
+                        style={{
+                            flex: 1,
+                            padding: '16px',
+                            backgroundColor: '#3b82f6',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '12px',
+                            fontSize: '16px',
+                            fontWeight: '700',
+                            cursor: 'pointer',
+                            transition: 'transform 0.1s',
+                        }}
+                        onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+                        onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                    >
+                        ดูสถานะออเดอร์
+                    </button>
+                </div>
+
                 {/* Back to Menu Button */}
                 <button
-                    onClick={() => router.push('/menu/A12')}
+                    onClick={() => {
+                        const tableCode = order.tableCode || 'A12';
+                        router.push(`/menu/${tableCode}`);
+                    }}
                     style={{
                         width: '100%',
                         padding: '16px',

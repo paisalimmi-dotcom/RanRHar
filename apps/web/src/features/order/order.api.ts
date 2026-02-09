@@ -120,4 +120,49 @@ export const orderApi = {
             tableCode: response.tableCode || null,
         };
     },
+
+    /**
+     * Cancel order with reason (manager only, for special cases)
+     * Requires authentication (manager role)
+     */
+    async cancelOrder(orderId: string, reason?: string, refundRequired?: boolean): Promise<Order> {
+        const response = await apiClient.post<CreateOrderResponse & {
+            cancelledAt?: string | null;
+            cancelReason?: string | null;
+            refundRequired?: boolean;
+        }>(
+            `/orders/${orderId}/cancel`,
+            { reason, refundRequired },
+            true // Auth required
+        );
+
+        return {
+            id: response.id,
+            items: response.items,
+            subtotal: response.subtotal,
+            total: response.total,
+            status: response.status,
+            createdAt: response.createdAt,
+            tableCode: response.tableCode || null,
+        };
+    },
+
+    /**
+     * Get order by ID (for customer order status page)
+     * No auth required for guest orders
+     */
+    async getOrderById(orderId: string, tableCode?: string): Promise<Order | null> {
+        try {
+            // Try authenticated endpoint first (for staff)
+            const response = await apiClient.get<Order>(
+                `/orders/${orderId}`,
+                true // Try with auth
+            );
+            return response;
+        } catch {
+            // If auth fails, might be guest order - would need public endpoint
+            // For now, return null if not found
+            return null;
+        }
+    },
 };
