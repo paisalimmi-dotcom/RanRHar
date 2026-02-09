@@ -31,10 +31,17 @@ export const OrderIdParamSchema = Type.Object({
 
 export const UpdateOrderStatusBodySchema = Type.Object({
     status: Type.Union([
+        // Legacy statuses
         Type.Literal('PENDING'),
         Type.Literal('CONFIRMED'),
         Type.Literal('COMPLETED'),
         Type.Literal('CANCELLED'),
+        // KDS statuses
+        Type.Literal('NEW'),
+        Type.Literal('ACCEPTED'),
+        Type.Literal('COOKING'),
+        Type.Literal('READY'),
+        Type.Literal('SERVED'),
     ]),
 });
 

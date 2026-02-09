@@ -2,7 +2,7 @@
 // Replaces localStorage persistence with backend API calls
 
 import { apiClient } from '@/lib/api-client';
-import type { Order, OrderItem } from '@/shared/types/order';
+import type { Order, OrderItem, OrderStatus } from '@/shared/types/order';
 
 interface CreateOrderRequest {
     items: OrderItem[];
@@ -102,7 +102,7 @@ export const orderApi = {
      * Update order status via API
      * Requires authentication (owner or staff role)
      */
-    async updateOrderStatus(orderId: string, status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED'): Promise<Order> {
+    async updateOrderStatus(orderId: string, status: OrderStatus): Promise<Order> {
         const response = await apiClient.patch<CreateOrderResponse>(
             `/orders/${orderId}/status`,
             { status },

@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import type { OrderStatus } from '@/shared/types/order';
 
 interface CancelOrderModalProps {
     isOpen: boolean;
     orderId: string;
-    orderStatus: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
+    orderStatus: OrderStatus;
     isManager: boolean;
     onConfirm: (reason?: string, refundRequired?: boolean) => Promise<void>;
     onCancel: () => void;
@@ -42,7 +43,8 @@ export function CancelOrderModal({
         }
     };
 
-    const requiresReason = isManager && orderStatus !== 'PENDING';
+    // Require reason for non-pending/new orders
+    const requiresReason = isManager && orderStatus !== 'PENDING' && orderStatus !== 'NEW';
 
     return (
         <div
@@ -90,7 +92,7 @@ export function CancelOrderModal({
                     ยกเลิกออเดอร์ #{orderId}
                 </h2>
 
-                {orderStatus !== 'PENDING' && (
+                {orderStatus !== 'PENDING' && orderStatus !== 'NEW' && (
                     <div
                         style={{
                             backgroundColor: '#fff3cd',

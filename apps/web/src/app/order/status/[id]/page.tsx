@@ -9,24 +9,45 @@ import { LoadingFallback } from '@/components/LoadingFallback';
 import { APIError } from '@/lib/api-client';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
+    // Legacy statuses
     PENDING: 'รอทำอาหาร',
     CONFIRMED: 'กำลังทำอาหาร',
     COMPLETED: 'เสร็จแล้ว',
     CANCELLED: 'ยกเลิกแล้ว',
+    // KDS statuses
+    NEW: 'ออเดอร์ใหม่',
+    ACCEPTED: 'รับออเดอร์แล้ว',
+    COOKING: 'กำลังทำอาหาร',
+    READY: 'พร้อมเสิร์ฟ',
+    SERVED: 'เสิร์ฟแล้ว',
 };
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
+    // Legacy statuses
     PENDING: '#fbbf24',
     CONFIRMED: '#3b82f6',
     COMPLETED: '#10b981',
     CANCELLED: '#6b7280',
+    // KDS statuses
+    NEW: '#fbbf24',
+    ACCEPTED: '#3b82f6',
+    COOKING: '#f97316',
+    READY: '#10b981',
+    SERVED: '#6b7280',
 };
 
 const STATUS_ICONS: Record<OrderStatus, string> = {
+    // Legacy statuses
     PENDING: '⏳',
     CONFIRMED: '👨‍🍳',
     COMPLETED: '✅',
     CANCELLED: '❌',
+    // KDS statuses
+    NEW: '🆕',
+    ACCEPTED: '✅',
+    COOKING: '👨‍🍳',
+    READY: '🍽️',
+    SERVED: '✓',
 };
 
 export default function OrderStatusPage() {
@@ -80,12 +101,11 @@ export default function OrderStatusPage() {
 
         setIsCancelling(true);
         try {
-            // For PENDING orders, use status update
-            if (order.status === 'PENDING') {
+            // For NEW/PENDING orders, use status update
+            if (order.status === 'PENDING' || order.status === 'NEW') {
                 await orderApi.updateOrderStatus(order.id, 'CANCELLED');
             } else {
-                // For CONFIRMED/COMPLETED, use cancel endpoint (requires manager)
-                // But customer can't cancel these, so this shouldn't happen
+                // For other statuses, customer can't cancel
                 throw new Error('ไม่สามารถยกเลิกออเดอร์ที่กำลังทำหรือเสร็จแล้วได้');
             }
             // Reload order to get updated status
@@ -171,7 +191,8 @@ export default function OrderStatusPage() {
         minute: '2-digit',
     });
 
-    const canCancel = order.status === 'PENDING';
+    // Can cancel if NEW or PENDING (legacy)
+    const canCancel = order.status === 'PENDING' || order.status === 'NEW';
 
     return (
         <div

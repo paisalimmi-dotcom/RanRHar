@@ -8,17 +8,31 @@ import type { Order, OrderStatus } from '@/shared/types/order';
 import { useEffect, useState } from 'react';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
+    // Legacy statuses
     PENDING: 'รอทำ',
     CONFIRMED: 'กำลังทำ',
     COMPLETED: 'เสร็จแล้ว',
     CANCELLED: 'ยกเลิก',
+    // KDS statuses
+    NEW: 'ออเดอร์ใหม่',
+    ACCEPTED: 'รับออเดอร์แล้ว',
+    COOKING: 'กำลังทำ',
+    READY: 'พร้อมเสิร์ฟ',
+    SERVED: 'เสิร์ฟแล้ว',
 };
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
+    // Legacy statuses
     PENDING: 'bg-amber-50 border-amber-300',
     CONFIRMED: 'bg-blue-50 border-blue-300',
     COMPLETED: 'bg-green-50 border-green-300',
     CANCELLED: 'bg-gray-50 border-gray-300',
+    // KDS statuses
+    NEW: 'bg-yellow-50 border-yellow-400',
+    ACCEPTED: 'bg-blue-50 border-blue-400',
+    COOKING: 'bg-orange-50 border-orange-400',
+    READY: 'bg-green-50 border-green-400',
+    SERVED: 'bg-gray-50 border-gray-400',
 };
 
 function KDSContent() {
@@ -35,8 +49,17 @@ function KDSContent() {
     async function loadOrders() {
         try {
             const data = await orderApi.getOrders();
-            // Filter out cancelled orders from KDS
-            setOrders(data.filter(o => o.status !== 'CANCELLED'));
+            // Filter out cancelled and served orders from KDS
+            // Also map legacy statuses to KDS statuses for display
+            const kdsOrders = data
+                .filter(o => o.status !== 'CANCELLED' && o.status !== 'SERVED' && o.status !== 'COMPLETED')
+                .map(o => {
+                    // Map legacy statuses to KDS statuses
+                    if (o.status === 'PENDING') return { ...o, status: 'NEW' as OrderStatus };
+                    if (o.status === 'CONFIRMED') return { ...o, status: 'ACCEPTED' as OrderStatus };
+                    return o;
+                });
+            setOrders(kdsOrders);
         } catch {
             // Silent fail
         } finally {
@@ -67,7 +90,7 @@ function KDSContent() {
                 <div className="flex gap-4 items-center">
                     <StaffNav dark />
                     <span className="text-sm text-gray-400">
-                        อัปเดตอัตโนมัติทุก 30 วินาที
+                        อัปเดตอัตโนมัติทุก 5 วินาที
                     </span>
                     <button
                         onClick={loadOrders}
@@ -136,12 +159,12 @@ function KDSContent() {
                                             ฿{order.total.toFixed(2)}
                                         </div>
                                         <div className="flex gap-2 flex-wrap">
-                                            {status === 'PENDING' && (
+                                            {status === 'NEW' && (
                                                 <button
                                                     onClick={() =>
                                                         handleStatusChange(
                                                             order.id,
-                                                            'CONFIRMED'
+                                                            'ACCEPTED'
                                                         )
                                                     }
                                                     disabled={
@@ -152,12 +175,28 @@ function KDSContent() {
                                                     รับออเดอร์
                                                 </button>
                                             )}
-                                            {status === 'CONFIRMED' && (
+                                            {status === 'ACCEPTED' && (
                                                 <button
                                                     onClick={() =>
                                                         handleStatusChange(
                                                             order.id,
-                                                            'COMPLETED'
+                                                            'COOKING'
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        updatingOrderId === order.id
+                                                    }
+                                                    className="px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 disabled:opacity-50"
+                                                >
+                                                    เริ่มทำ
+                                                </button>
+                                            )}
+                                            {status === 'COOKING' && (
+                                                <button
+                                                    onClick={() =>
+                                                        handleStatusChange(
+                                                            order.id,
+                                                            'READY'
                                                         )
                                                     }
                                                     disabled={
@@ -165,7 +204,23 @@ function KDSContent() {
                                                     }
                                                     className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:opacity-50"
                                                 >
-                                                    เสร็จแล้ว
+                                                    พร้อมเสิร์ฟ
+                                                </button>
+                                            )}
+                                            {status === 'READY' && (
+                                                <button
+                                                    onClick={() =>
+                                                        handleStatusChange(
+                                                            order.id,
+                                                            'SERVED'
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        updatingOrderId === order.id
+                                                    }
+                                                    className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700 disabled:opacity-50"
+                                                >
+                                                    เสิร์ฟแล้ว
                                                 </button>
                                             )}
                                         </div>

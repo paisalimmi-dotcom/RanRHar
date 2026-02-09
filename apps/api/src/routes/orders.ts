@@ -326,7 +326,7 @@ export async function orderRoutes(fastify: FastifyInstance) {
         },
     }, async (request, reply) => {
         const { id } = request.params as { id: string };
-        const { status } = request.body as { status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' };
+        const { status } = request.body as { status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'NEW' | 'ACCEPTED' | 'COOKING' | 'READY' | 'SERVED' };
 
         try {
             // If cancelling, check if order can be cancelled

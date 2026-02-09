@@ -8,7 +8,18 @@ export type OrderItem = {
     quantity: number;
 };
 
-export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
+export type OrderStatus = 
+    // Legacy statuses
+    | 'PENDING' 
+    | 'CONFIRMED' 
+    | 'COMPLETED' 
+    | 'CANCELLED'
+    // KDS statuses
+    | 'NEW'
+    | 'ACCEPTED'
+    | 'COOKING'
+    | 'READY'
+    | 'SERVED';
 
 export type OrderPaymentSummary = {
     id: string;
