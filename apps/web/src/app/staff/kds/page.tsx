@@ -1,5 +1,6 @@
 'use client';
 
+import { TableSkeleton } from '@/components/skeletons/TableSkeleton';
 import { AuthGuard } from '@/features/auth';
 import { StaffNav } from '@/features/auth/components/StaffNav';
 import { orderApi } from '@/features/order/order.api';
@@ -75,6 +76,24 @@ function KDSContent() {
                 </div>
             </header>
 
+            {loading && orders.length === 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {columns.map((status) => (
+                        <div
+                            key={status}
+                            className={`rounded-xl border-2 p-4 min-h-[400px] ${STATUS_COLORS[status]} text-gray-900`}
+                        >
+                            <h2 className="text-lg font-bold mb-4">{STATUS_LABELS[status]}</h2>
+                            <TableSkeleton rows={4} />
+                        </div>
+                    ))}
+                </div>
+            ) : !loading && orders.length === 0 ? (
+                <div className="text-center py-16 text-gray-400">
+                    <p className="text-lg">ยังไม่มีออเดอร์รอทำ</p>
+                    <p className="text-sm mt-2">ออเดอร์จะแสดงเมื่อลูกค้าสั่งอาหาร</p>
+                </div>
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {columns.map((status) => {
                     const columnOrders = orders.filter((o) => o.status === status);
@@ -149,6 +168,7 @@ function KDSContent() {
                     );
                 })}
             </div>
+            )}
         </div>
     );
 }

@@ -226,6 +226,7 @@ function MenuItemCard({ item, onAdd }: { item: MenuItem; onAdd: () => void }) {
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onAdd(); }}
                         className="px-4 py-2 rounded-xl bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 active:scale-95 transition-all"
+                        aria-label={`เพิ่ม ${item.name} เข้าตะกร้า`}
                     >
                         เพิ่ม
                     </button>

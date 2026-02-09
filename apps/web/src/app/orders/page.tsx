@@ -1,5 +1,6 @@
 'use client'
 
+import { TableSkeleton } from '@/components/skeletons/TableSkeleton'
 import { AuthGuard, authStore } from '@/features/auth'
 import { StaffNav } from '@/features/auth/components/StaffNav'
 import { orderApi } from '@/features/order/order.api'
@@ -142,12 +143,15 @@ export default function OrdersPage() {
                     )}
 
                     {loading && filteredOrders.length === 0 ? (
-                        <div className="bg-white rounded-lg shadow-md p-8 text-center text-gray-500">
-                            Loading orders...
+                        <div className="bg-white rounded-lg shadow-md p-8">
+                            <TableSkeleton rows={8} />
                         </div>
                     ) : filteredOrders.length === 0 ? (
-                        <div className="bg-white rounded-lg shadow-md p-8 text-center text-gray-500">
-                            {statusFilter === 'ALL' ? 'No orders found' : `No ${statusFilter.toLowerCase()} orders`}
+                        <div className="bg-white rounded-lg shadow-md p-12 text-center">
+                            <p className="text-gray-500 text-lg mb-2">
+                                {statusFilter === 'ALL' ? 'ยังไม่มีออเดอร์' : `ไม่มีออเดอร์สถานะ ${statusFilter}`}
+                            </p>
+                            <p className="text-gray-400 text-sm">ลูกค้าสามารถสั่งอาหารผ่านเมนูได้</p>
                         </div>
                     ) : (
                         <div className="bg-white rounded-lg shadow-md overflow-hidden">

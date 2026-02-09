@@ -128,6 +128,8 @@ function CheckoutContent() {
                 <button
                     onClick={handlePlaceOrder}
                     disabled={isPlacingOrder}
+                    aria-busy={isPlacingOrder}
+                    aria-label={isPlacingOrder ? 'กำลังสั่งอาหาร...' : 'สั่งอาหาร'}
                     style={{
                         width: '100%',
                         padding: '16px',
