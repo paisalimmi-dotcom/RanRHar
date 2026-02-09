@@ -6,8 +6,10 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import { CartProvider, useCart, CartSummary } from '../../cart';
 import { authStore } from '../../auth/auth.store';
 import type { MenuCategory, MenuItem, RestaurantInfo } from '../types';
+import { TableWarningBanner } from '@/components/TableWarningBanner';
 
 const TABLE_CODE_KEY = 'ranrhar_table_code';
+const LAST_ORDER_TABLE_KEY = 'lastOrderTableCode';
 const ITEMS_PER_PAGE = 12; // Show 12 items initially, then "โหลดเพิ่ม" for 30+ items
 
 type MenuPageProps = {
@@ -29,8 +31,14 @@ function MenuContent({ data }: { data: MenuPageProps['initialData'] }) {
     const { addToCart } = useCart();
     const [search, setSearch] = useState('');
     const [showStaffLink, setShowStaffLink] = useState(false);
+    const [lastOrderTableCode, setLastOrderTableCode] = useState<string | null>(null);
     useEffect(() => {
         setShowStaffLink(!!authStore.getSession());
+        // Check for last order table code
+        if (typeof window !== 'undefined') {
+            const last = sessionStorage.getItem(LAST_ORDER_TABLE_KEY);
+            setLastOrderTableCode(last);
+        }
     }, []);
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
     const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -106,6 +114,14 @@ function MenuContent({ data }: { data: MenuPageProps['initialData'] }) {
 
             {/* Content */}
             <div className="max-w-4xl mx-auto px-4 py-6">
+                {/* Table Warning Banner */}
+                {lastOrderTableCode && restaurant.tableCode && lastOrderTableCode !== restaurant.tableCode && (
+                    <TableWarningBanner
+                        currentTable={restaurant.tableCode}
+                        lastOrderTable={lastOrderTableCode}
+                    />
+                )}
+
                 {filteredCategories.length === 0 ? (
                     <div className="text-center py-16 text-gray-500">
                         {search ? 'ไม่พบเมนูที่ตรงกับคำค้นหา' : 'ยังไม่มีเมนู'}

@@ -8,7 +8,7 @@ export type OrderItem = {
     quantity: number;
 };
 
-export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'COMPLETED';
+export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
 
 export type OrderPaymentSummary = {
     id: string;
@@ -24,5 +24,6 @@ export type Order = {
     total: number;
     status: OrderStatus;
     createdAt: string; // ISO timestamp
+    tableCode?: string | null; // เลขโต๊ะ
     payment?: OrderPaymentSummary | null;
 };

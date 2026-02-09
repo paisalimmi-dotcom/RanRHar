@@ -5,6 +5,7 @@ import { auditLog } from '../lib/audit';
 import { incrementOrders } from '../lib/metrics';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import {
+    CancelOrderBodySchema,
     CreateGuestOrderBodySchema,
     CreateOrderBodySchema,
     OrderIdParamSchema,
@@ -138,10 +139,10 @@ export async function orderRoutes(fastify: FastifyInstance) {
             try {
                 const guestUserId = await getGuestUserId();
                 const result = await pool.query(
-                    `INSERT INTO orders (items, total, created_by) 
-                     VALUES ($1, $2, $3) 
-                     RETURNING id, items, total, status, created_at, created_by`,
-                    [JSON.stringify(items), total, guestUserId]
+                    `INSERT INTO orders (items, total, created_by, table_code) 
+                     VALUES ($1, $2, $3, $4) 
+                     RETURNING id, items, total, status, created_at, created_by, table_code`,
+                    [JSON.stringify(items), total, guestUserId, tableCode || null]
                 );
                 const order = result.rows[0];
                 await auditLog({ action: 'order.create', entityType: 'order', entityId: order.id.toString(), actorId: guestUserId, metadata: { total, itemCount: items.length }, ip: request.ip });
@@ -225,7 +226,7 @@ export async function orderRoutes(fastify: FastifyInstance) {
     }, async (request, reply) => {
         try {
             const result = await pool.query(
-                `SELECT o.id, o.items, o.total, o.status, o.created_at, o.created_by, u.email, u.role,
+                `SELECT o.id, o.items, o.total, o.status, o.created_at, o.created_by, o.table_code, u.email, u.role,
                         p.id as payment_id, p.amount as payment_amount, p.method as payment_method, p.status as payment_status
                  FROM orders o
                  JOIN users u ON o.created_by = u.id
@@ -241,6 +242,7 @@ export async function orderRoutes(fastify: FastifyInstance) {
                 total: parseFloat(row.total),
                 status: row.status,
                 createdAt: row.created_at.toISOString(),
+                tableCode: row.table_code || null,
                 createdBy: {
                     id: row.created_by,
                     email: row.email,
@@ -270,14 +272,44 @@ export async function orderRoutes(fastify: FastifyInstance) {
         },
     }, async (request, reply) => {
         const { id } = request.params as { id: string };
-        const { status } = request.body as { status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' };
+        const { status } = request.body as { status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' };
 
         try {
+            // If cancelling, check if order can be cancelled
+            if (status === 'CANCELLED') {
+                const orderResult = await pool.query(
+                    `SELECT status, created_by FROM orders WHERE id = $1`,
+                    [id]
+                );
+
+                if (orderResult.rows.length === 0) {
+                    return reply.status(404).send({ error: 'Order not found' });
+                }
+
+                const order = orderResult.rows[0];
+                const userRole = request.user!.role;
+
+                // Check if order has payment
+                const paymentResult = await pool.query(
+                    `SELECT id FROM payments WHERE order_id = $1 AND status = 'PAID'`,
+                    [id]
+                );
+
+                if (paymentResult.rows.length > 0) {
+                    return reply.status(400).send({ error: 'Cannot cancel paid order. Refund required.' });
+                }
+
+                // Only PENDING can be cancelled by anyone, CONFIRMED/COMPLETED only by manager
+                if (order.status !== 'PENDING' && userRole !== 'manager') {
+                    return reply.status(403).send({ error: 'Only manager can cancel CONFIRMED or COMPLETED orders' });
+                }
+            }
+
             const result = await pool.query(
                 `UPDATE orders 
                  SET status = $1 
                  WHERE id = $2 
-                 RETURNING id, items, total, status, created_at, created_by`,
+                 RETURNING id, items, total, status, created_at, created_by, table_code`,
                 [status, id]
             );
 
@@ -296,9 +328,86 @@ export async function orderRoutes(fastify: FastifyInstance) {
                 status: order.status,
                 createdAt: order.created_at.toISOString(),
                 createdBy: order.created_by,
+                tableCode: order.table_code || null,
             });
         } catch (error) {
             request.log.error({ err: error }, 'Update order status error');
+            return reply.status(500).send({ error: 'Internal server error' });
+        }
+    });
+
+    // POST /orders/:id/cancel - Cancel order with reason (for manager special cases)
+    fastify.post('/orders/:id/cancel', {
+        preHandler: [authMiddleware, requireRole('manager')],
+        schema: {
+            params: OrderIdParamSchema,
+            body: CancelOrderBodySchema,
+        },
+    }, async (request, reply) => {
+        const { id } = request.params as { id: string };
+        const { reason, refundRequired } = request.body as { reason?: string; refundRequired?: boolean };
+
+        try {
+            // Get current order status
+            const orderResult = await pool.query(
+                `SELECT status, created_by FROM orders WHERE id = $1`,
+                [id]
+            );
+
+            if (orderResult.rows.length === 0) {
+                return reply.status(404).send({ error: 'Order not found' });
+            }
+
+            const order = orderResult.rows[0];
+
+            // Check if order has payment
+            const paymentResult = await pool.query(
+                `SELECT id FROM payments WHERE order_id = $1 AND status = 'PAID'`,
+                [id]
+            );
+
+            if (paymentResult.rows.length > 0 && !refundRequired) {
+                return reply.status(400).send({ error: 'Paid order requires refund. Set refundRequired=true' });
+            }
+
+            // Cancel the order
+            const result = await pool.query(
+                `UPDATE orders 
+                 SET status = 'CANCELLED',
+                     cancelled_at = CURRENT_TIMESTAMP,
+                     cancelled_by = $1,
+                     cancel_reason = $2,
+                     refund_required = $3
+                 WHERE id = $4
+                 RETURNING id, items, total, status, created_at, created_by, table_code, cancelled_at, cancel_reason, refund_required`,
+                [request.user!.userId, reason || null, refundRequired || false, id]
+            );
+
+            const cancelledOrder = result.rows[0];
+            await auditLog({ 
+                action: 'order.cancel', 
+                entityType: 'order', 
+                entityId: id, 
+                actorId: request.user!.userId, 
+                actorEmail: request.user!.email, 
+                metadata: { reason, refundRequired, previousStatus: order.status } 
+            });
+
+            return reply.send({
+                id: cancelledOrder.id.toString(),
+                items: cancelledOrder.items,
+                subtotal: parseFloat(cancelledOrder.total),
+                total: parseFloat(cancelledOrder.total),
+                status: cancelledOrder.status,
+                createdAt: cancelledOrder.created_at.toISOString(),
+                createdBy: cancelledOrder.created_by,
+                tableCode: cancelledOrder.table_code || null,
+                cancelledAt: cancelledOrder.cancelled_at?.toISOString() || null,
+                cancelReason: cancelledOrder.cancel_reason || null,
+                refundRequired: cancelledOrder.refund_required || false,
+            });
+        } catch (error) {
+            request.log.error({ err: error }, 'Cancel order error');
             return reply.status(500).send({ error: 'Internal server error' });
         }
     });

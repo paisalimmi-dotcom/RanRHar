@@ -17,6 +17,7 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
     PENDING: 'bg-yellow-100 text-yellow-800 border-yellow-300',
     CONFIRMED: 'bg-blue-100 text-blue-800 border-blue-300',
     COMPLETED: 'bg-green-100 text-green-800 border-green-300',
+    CANCELLED: 'bg-gray-100 text-gray-800 border-gray-300',
 }
 
 export default function OrdersPage() {
@@ -162,6 +163,9 @@ export default function OrdersPage() {
                                             Order ID
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                                            โต๊ะ
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                                             Items
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
@@ -184,6 +188,15 @@ export default function OrdersPage() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                 #{order.id}
                                             </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                                {order.tableCode ? (
+                                                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded font-medium">
+                                                        {order.tableCode}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-gray-400">-</span>
+                                                )}
+                                            </td>
                                             <td className="px-6 py-4 text-sm text-gray-700">
                                                 {order.items.length} item{order.items.length !== 1 ? 's' : ''}
                                                 <div className="text-xs text-gray-500 mt-1">
@@ -203,6 +216,7 @@ export default function OrdersPage() {
                                                     <option value="PENDING">PENDING</option>
                                                     <option value="CONFIRMED">CONFIRMED</option>
                                                     <option value="COMPLETED">COMPLETED</option>
+                                                    <option value="CANCELLED">CANCELLED</option>
                                                 </select>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">

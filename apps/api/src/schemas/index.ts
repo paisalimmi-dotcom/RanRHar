@@ -34,7 +34,13 @@ export const UpdateOrderStatusBodySchema = Type.Object({
         Type.Literal('PENDING'),
         Type.Literal('CONFIRMED'),
         Type.Literal('COMPLETED'),
+        Type.Literal('CANCELLED'),
     ]),
+});
+
+export const CancelOrderBodySchema = Type.Object({
+    reason: Type.Optional(Type.String({ maxLength: 500 })),
+    refundRequired: Type.Optional(Type.Boolean()),
 });
 
 // Payment schemas

@@ -51,6 +51,11 @@ export async function createOrder(cartItems: CartItem[]): Promise<Order> {
         // Customer flow: use guest endpoint (no login required)
         const order = await orderApi.createGuestOrder(orderItems, subtotal, tableCode || undefined);
 
+        // Store lastOrderTableCode in sessionStorage after successful order
+        if (typeof window !== 'undefined' && tableCode) {
+            sessionStorage.setItem('lastOrderTableCode', tableCode);
+        }
+
         // Update local cache
         const cached = getCachedOrders();
         cached.push(order);

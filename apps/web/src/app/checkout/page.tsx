@@ -7,17 +7,34 @@ import { createOrder } from '@/features/order/order.store';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AuthGuard } from '@/features/auth';
+import { ConfirmTableChangeModal } from '@/components/ConfirmTableChangeModal';
+
+const TABLE_CODE_KEY = 'ranrhar_table_code';
+const LAST_ORDER_TABLE_KEY = 'lastOrderTableCode';
 
 function CheckoutContent() {
     const { items, totalItems, totalPrice, clearCart, isInitialized } = useCart();
     const router = useRouter();
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
     const [orderError, setOrderError] = useState<string | null>(null);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [currentTableCode, setCurrentTableCode] = useState<string | null>(null);
+    const [lastOrderTableCode, setLastOrderTableCode] = useState<string | null>(null);
+
+    // Get table codes from sessionStorage
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const current = sessionStorage.getItem(TABLE_CODE_KEY);
+            const last = sessionStorage.getItem(LAST_ORDER_TABLE_KEY);
+            setCurrentTableCode(current);
+            setLastOrderTableCode(last);
+        }
+    }, []);
 
     // Redirect if cart is empty, but wait until initialized
     useEffect(() => {
         if (isInitialized && totalItems === 0) {
-            const tableCode = typeof window !== 'undefined' ? sessionStorage.getItem('ranrhar_table_code') : null;
+            const tableCode = typeof window !== 'undefined' ? sessionStorage.getItem(TABLE_CODE_KEY) : null;
             router.push(tableCode ? `/menu/${tableCode}` : '/menu/A12');
         }
     }, [totalItems, router, isInitialized]);
@@ -25,7 +42,18 @@ function CheckoutContent() {
     const handlePlaceOrder = async () => {
         if (items.length === 0) return;
 
+        // Check if table code changed from last order
+        if (currentTableCode && lastOrderTableCode && currentTableCode !== lastOrderTableCode) {
+            setShowConfirmModal(true);
+            return;
+        }
+
+        await executePlaceOrder();
+    };
+
+    const executePlaceOrder = async () => {
         setIsPlacingOrder(true);
+        setShowConfirmModal(false);
 
         try {
             setOrderError(null);
@@ -153,7 +181,7 @@ function CheckoutContent() {
                 <div style={{ textAlign: 'center', marginTop: '16px' }}>
                     <button
                         onClick={() => {
-                            const tableCode = typeof window !== 'undefined' ? sessionStorage.getItem('ranrhar_table_code') : null;
+                            const tableCode = typeof window !== 'undefined' ? sessionStorage.getItem(TABLE_CODE_KEY) : null;
                             router.push(tableCode ? `/menu/${tableCode}` : '/menu/A12');
                         }}
                         style={{
@@ -169,6 +197,17 @@ function CheckoutContent() {
                     </button>
                 </div>
             </div>
+
+            {/* Confirm Table Change Modal */}
+            {currentTableCode && lastOrderTableCode && (
+                <ConfirmTableChangeModal
+                    isOpen={showConfirmModal}
+                    currentTable={currentTableCode}
+                    lastOrderTable={lastOrderTableCode}
+                    onConfirm={executePlaceOrder}
+                    onCancel={() => setShowConfirmModal(false)}
+                />
+            )}
         </div>
     );
 }

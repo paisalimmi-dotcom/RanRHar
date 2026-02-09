@@ -11,12 +11,14 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
     PENDING: 'รอทำ',
     CONFIRMED: 'กำลังทำ',
     COMPLETED: 'เสร็จแล้ว',
+    CANCELLED: 'ยกเลิก',
 };
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
     PENDING: 'bg-amber-50 border-amber-300',
     CONFIRMED: 'bg-blue-50 border-blue-300',
     COMPLETED: 'bg-green-50 border-green-300',
+    CANCELLED: 'bg-gray-50 border-gray-300',
 };
 
 function KDSContent() {
@@ -33,7 +35,8 @@ function KDSContent() {
     async function loadOrders() {
         try {
             const data = await orderApi.getOrders();
-            setOrders(data);
+            // Filter out cancelled orders from KDS
+            setOrders(data.filter(o => o.status !== 'CANCELLED'));
         } catch {
             // Silent fail
         } finally {
@@ -114,8 +117,13 @@ function KDSContent() {
                                         key={order.id}
                                         className="bg-white rounded-lg p-4 shadow border"
                                     >
-                                        <div className="font-bold text-sm mb-2">
-                                            ออเดอร์ #{order.id}
+                                        <div className="font-bold text-sm mb-2 flex justify-between items-center">
+                                            <span>ออเดอร์ #{order.id}</span>
+                                            {order.tableCode && (
+                                                <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                                                    โต๊ะ {order.tableCode}
+                                                </span>
+                                            )}
                                         </div>
                                         <ul className="text-sm space-y-1 mb-3">
                                             {order.items.map((item, i) => (

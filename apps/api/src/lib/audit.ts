@@ -3,6 +3,7 @@ import { pool } from '../db';
 export type AuditAction =
     | 'order.create'
     | 'order.status_update'
+    | 'order.cancel'
     | 'payment.create'
     | 'auth.login'
     | 'auth.logout'

@@ -17,6 +17,7 @@ interface CreateOrderResponse {
     status: 'PENDING';
     createdAt: string;
     createdBy: number;
+    tableCode?: string | null;
 }
 
 interface GetOrdersResponse {
@@ -47,6 +48,7 @@ export const orderApi = {
             total: response.total,
             status: response.status,
             createdAt: response.createdAt,
+            tableCode: response.tableCode || null,
         };
     },
 
@@ -69,6 +71,7 @@ export const orderApi = {
             total: response.total,
             status: response.status,
             createdAt: response.createdAt,
+            tableCode: response.tableCode || null,
         };
     },
 
@@ -90,6 +93,7 @@ export const orderApi = {
             total: order.total,
             status: order.status,
             createdAt: order.createdAt,
+            tableCode: order.tableCode || null,
             payment: order.payment ?? null,
         }));
     },
@@ -98,7 +102,7 @@ export const orderApi = {
      * Update order status via API
      * Requires authentication (owner or staff role)
      */
-    async updateOrderStatus(orderId: string, status: 'PENDING' | 'CONFIRMED' | 'COMPLETED'): Promise<Order> {
+    async updateOrderStatus(orderId: string, status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED'): Promise<Order> {
         const response = await apiClient.patch<CreateOrderResponse>(
             `/orders/${orderId}/status`,
             { status },
@@ -113,6 +117,7 @@ export const orderApi = {
             total: response.total,
             status: response.status,
             createdAt: response.createdAt,
+            tableCode: response.tableCode || null,
         };
     },
 };

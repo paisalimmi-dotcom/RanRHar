@@ -20,7 +20,8 @@ function TablesContent() {
     async function loadOrders() {
         try {
             const data = await orderApi.getOrders();
-            setOrders(data);
+            // Filter out cancelled orders
+            setOrders(data.filter(o => o.status !== 'CANCELLED'));
         } catch {
             // Silent fail
         } finally {
@@ -73,7 +74,14 @@ function TablesContent() {
                                         )
                                     }
                                 >
-                                    <div className="font-semibold">ออเดอร์ #{order.id}</div>
+                                    <div className="font-semibold flex justify-between items-center mb-1">
+                                        <span>ออเดอร์ #{order.id}</span>
+                                        {order.tableCode && (
+                                            <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                                                โต๊ะ {order.tableCode}
+                                            </span>
+                                        )}
+                                    </div>
                                     <span
                                         className={`text-xs px-2 py-0.5 rounded ${
                                             order.status === 'PENDING'
@@ -112,7 +120,14 @@ function TablesContent() {
                                     key={order.id}
                                     className="p-4 rounded-lg border border-gray-200"
                                 >
-                                    <div className="font-semibold">ออเดอร์ #{order.id}</div>
+                                    <div className="font-semibold flex justify-between items-center mb-1">
+                                        <span>ออเดอร์ #{order.id}</span>
+                                        {order.tableCode && (
+                                            <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                                                โต๊ะ {order.tableCode}
+                                            </span>
+                                        )}
+                                    </div>
                                     <span className="text-xs px-2 py-0.5 rounded bg-green-100 text-green-800">
                                         {order.payment ? '✓ จ่ายแล้ว' : 'เสร็จแล้ว'}
                                     </span>
