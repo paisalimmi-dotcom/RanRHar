@@ -148,20 +148,18 @@ export const orderApi = {
     },
 
     /**
-     * Get order by ID (for customer order status page)
-     * No auth required for guest orders
+     * Get order by ID (public endpoint for customer order status page)
+     * No auth required - uses public endpoint with tableCode verification
      */
     async getOrderById(orderId: string, tableCode?: string): Promise<Order | null> {
         try {
-            // Try authenticated endpoint first (for staff)
+            const queryParams = tableCode ? `?tableCode=${encodeURIComponent(tableCode)}` : '';
             const response = await apiClient.get<Order>(
-                `/orders/${orderId}`,
-                true // Try with auth
+                `/orders/${orderId}/public${queryParams}`,
+                false // No auth required
             );
             return response;
         } catch {
-            // If auth fails, might be guest order - would need public endpoint
-            // For now, return null if not found
             return null;
         }
     },

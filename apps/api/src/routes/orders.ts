@@ -1,5 +1,6 @@
 import { createHash } from 'crypto';
 import { FastifyInstance } from 'fastify';
+import { Type } from '@sinclair/typebox';
 import { pool } from '../db';
 import { auditLog } from '../lib/audit';
 import { incrementOrders } from '../lib/metrics';
@@ -105,6 +106,59 @@ async function getGuestUserId(): Promise<number> {
 }
 
 export async function orderRoutes(fastify: FastifyInstance) {
+    // GET /orders/:id/public - Get order status (public, no auth, rate limited)
+    // Security: Verify tableCode to prevent unauthorized access
+    fastify.get('/orders/:id/public', {
+        config: {
+            rateLimit: {
+                max: 60,
+                timeWindow: '1 minute',
+            },
+        },
+        schema: {
+            params: OrderIdParamSchema,
+            querystring: Type.Object({
+                tableCode: Type.Optional(Type.String({ maxLength: 50 })),
+            }),
+        },
+    }, async (request, reply) => {
+        const { id } = request.params as { id: string };
+        const { tableCode } = request.query as { tableCode?: string };
+
+        try {
+            const result = await pool.query(
+                `SELECT o.id, o.items, o.total, o.status, o.created_at, o.created_by, o.table_code
+                 FROM orders o
+                 WHERE o.id = $1`,
+                [id]
+            );
+
+            if (result.rows.length === 0) {
+                return reply.status(404).send({ error: 'Order not found' });
+            }
+
+            const order = result.rows[0];
+
+            // Verify table code if provided
+            if (tableCode && order.table_code && order.table_code !== tableCode) {
+                return reply.status(403).send({ error: 'Order does not belong to this table' });
+            }
+
+            return reply.send({
+                id: order.id.toString(),
+                items: order.items,
+                subtotal: parseFloat(order.total),
+                total: parseFloat(order.total),
+                status: order.status,
+                createdAt: order.created_at.toISOString(),
+                tableCode: order.table_code || null,
+            });
+        } catch (error) {
+            request.log.error({ err: error }, 'Get public order error');
+            return reply.status(500).send({ error: 'Internal server error' });
+        }
+    });
+
     // POST /orders/guest - Create order as customer (no auth, rate limited)
     // Security: 10 orders/min per IP to prevent abuse
     fastify.post('/orders/guest', {

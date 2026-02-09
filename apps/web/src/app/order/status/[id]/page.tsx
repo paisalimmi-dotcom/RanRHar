@@ -56,21 +56,11 @@ export default function OrderStatusPage() {
     async function loadOrder() {
         try {
             setError(null);
-            // For now, we'll need to get order from API
-            // Since we don't have public endpoint yet, try to get from orders list
-            // In production, we'd have GET /orders/:id/public?tableCode=xxx
-            const orders = await orderApi.getOrders();
-            const foundOrder = orders.find(o => o.id === orderId);
+            // Use public endpoint - no auth required
+            const foundOrder = await orderApi.getOrderById(orderId, tableCode || undefined);
 
             if (!foundOrder) {
                 setError('ไม่พบออเดอร์');
-                setOrder(null);
-                return;
-            }
-
-            // Verify table code if provided
-            if (tableCode && foundOrder.tableCode && foundOrder.tableCode !== tableCode) {
-                setError('ออเดอร์นี้ไม่ตรงกับโต๊ะของคุณ');
                 setOrder(null);
                 return;
             }
