@@ -59,15 +59,17 @@
 - [x] Standardize error handling
 - [x] เพิ่ม price validation
 
-### 2.2 Payment Routes (`apps/api/src/routes/payments.ts`)
-- [ ] แทนที่ error responses ด้วย `Errors.payment.*`
-- [ ] เพิ่ม validation
-- [ ] Standardize error handling
+### 2.2 Payment Routes (`apps/api/src/routes/payments.ts`) ✅
+- [x] แทนที่ error responses ด้วย `Errors.payment.*`
+- [x] เพิ่ม validation
+- [x] Standardize error handling
+- [x] เพิ่ม payment method validation
 
-### 2.3 Reservation Routes (`apps/api/src/routes/reservations.ts`)
-- [ ] แทนที่ error responses ด้วย `Errors.reservation.*`
-- [ ] เพิ่ม validation
-- [ ] Standardize error handling
+### 2.3 Reservation Routes (`apps/api/src/routes/reservations.ts`) ✅
+- [x] แทนที่ error responses ด้วย `Errors.reservation.*`
+- [x] เพิ่ม validation
+- [x] Standardize error handling
+- [x] เพิ่ม date/time validation
 
 ### 2.4 Auth Routes (`apps/api/src/routes/auth.ts`)
 - [ ] แทนที่ error responses ด้วย `Errors.auth.*`
