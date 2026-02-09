@@ -8,6 +8,7 @@ import { paymentApi } from '@/features/payment/payment.api';
 import { PaymentModal } from '@/features/payment/components/PaymentModal';
 import { SplitBillModal } from '@/features/payment/components/SplitBillModal';
 import { CombinedBillModal } from '@/features/payment/components/CombinedBillModal';
+import { ReceiptModal } from '@/components/ReceiptModal';
 import type { Order, OrderStatus } from '@/shared/types/order';
 import type { PaymentMethod } from '@/shared/types/payment';
 import { useEffect, useState } from 'react';
@@ -33,6 +34,7 @@ export default function CashierPage() {
     const [paymentModal, setPaymentModal] = useState<{ orderId: string; total: number } | null>(null);
     const [splitBillModal, setSplitBillModal] = useState<{ orderId: string; total: number } | null>(null);
     const [combinedBillModal, setCombinedBillModal] = useState<boolean>(false);
+    const [receiptModal, setReceiptModal] = useState<Order | null>(null);
     const [filter, setFilter] = useState<'ALL' | 'UNPAID' | 'PAID'>('UNPAID');
 
     useEffect(() => {
@@ -306,10 +308,7 @@ export default function CashierPage() {
                                                         </div>
                                                     ) : (
                                                         <button
-                                                            onClick={() => {
-                                                                // TODO: Generate receipt
-                                                                alert('กำลังสร้างใบเสร็จ...');
-                                                            }}
+                                                            onClick={() => setReceiptModal(order)}
                                                             className="px-3 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700"
                                                         >
                                                             ใบเสร็จ
@@ -356,6 +355,13 @@ export default function CashierPage() {
                         onConfirm={(orderIds, amount, method, notes) => handleCombinedPayment(orderIds, amount, method, notes)}
                     />
                 )}
+
+                {/* Receipt Modal */}
+                <ReceiptModal
+                    order={receiptModal}
+                    isOpen={!!receiptModal}
+                    onClose={() => setReceiptModal(null)}
+                />
             </div>
         </AuthGuard>
     );

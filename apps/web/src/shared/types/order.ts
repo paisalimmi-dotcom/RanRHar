@@ -26,6 +26,7 @@ export type OrderPaymentSummary = {
     amount: number;
     method: string;
     status: string;
+    paidAt?: string; // ISO timestamp
 };
 
 export type Order = {

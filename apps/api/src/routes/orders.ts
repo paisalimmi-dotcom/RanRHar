@@ -281,7 +281,7 @@ export async function orderRoutes(fastify: FastifyInstance) {
         try {
             const result = await pool.query(
                 `SELECT o.id, o.items, o.total, o.status, o.created_at, o.created_by, o.table_code, u.email, u.role,
-                        p.id as payment_id, p.amount as payment_amount, p.method as payment_method, p.status as payment_status
+                        p.id as payment_id, p.amount as payment_amount, p.method as payment_method, p.status as payment_status, p.paid_at as payment_paid_at
                  FROM orders o
                  JOIN users u ON o.created_by = u.id
                  LEFT JOIN payments p ON p.order_id = o.id
@@ -307,6 +307,7 @@ export async function orderRoutes(fastify: FastifyInstance) {
                     amount: parseFloat(row.payment_amount),
                     method: row.payment_method,
                     status: row.payment_status,
+                    paidAt: row.payment_paid_at ? row.payment_paid_at.toISOString() : undefined,
                 } : null,
             }));
 
