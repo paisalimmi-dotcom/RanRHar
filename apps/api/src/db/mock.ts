@@ -2,23 +2,23 @@ const isProd = process.env.NODE_ENV === 'production';
 
 // Mutable store for menu categories (CRUD in dev)
 let mockCategoriesStore: { id: number; name: string; sort_order: number }[] = [
-    { id: 1, name: 'Recommended', sort_order: 0 },
-    { id: 2, name: 'Main Dishes', sort_order: 1 },
-    { id: 3, name: 'Beverages', sort_order: 2 },
+    { id: 1, name: 'แนะนำ', sort_order: 0 },
+    { id: 2, name: 'อาหารจานหลัก', sort_order: 1 },
+    { id: 3, name: 'เครื่องดื่ม', sort_order: 2 },
 ];
 let nextCategoryId = 4;
 
 // Mutable store for menu items (allows owner to edit image/name/price in dev)
 const mockMenuStore: Record<number, { name: string; price_thb: number; imageUrl: string | null; category_id: number }> = {
-    1: { name: 'Signature Pad Thai', price_thb: 199, imageUrl: 'https://picsum.photos/seed/padthai/400/300', category_id: 1 },
-    2: { name: 'Tom Yum Goong', price_thb: 249, imageUrl: 'https://picsum.photos/seed/tomyum/400/300', category_id: 1 },
-    3: { name: 'Green Curry', price_thb: 189, imageUrl: 'https://picsum.photos/seed/greencurry/400/300', category_id: 1 },
-    4: { name: 'Grilled Chicken', price_thb: 159, imageUrl: 'https://picsum.photos/seed/chicken/400/300', category_id: 2 },
-    5: { name: 'Fried Rice', price_thb: 89, imageUrl: 'https://picsum.photos/seed/friedrice/400/300', category_id: 2 },
-    6: { name: 'Stir-Fried Vegetables', price_thb: 79, imageUrl: 'https://picsum.photos/seed/veggies/400/300', category_id: 2 },
-    7: { name: 'Thai Iced Tea', price_thb: 45, imageUrl: 'https://picsum.photos/seed/thaitea/400/300', category_id: 3 },
-    8: { name: 'Fresh Coconut', price_thb: 55, imageUrl: 'https://picsum.photos/seed/coconut/400/300', category_id: 3 },
-    9: { name: 'Mango Smoothie', price_thb: 65, imageUrl: 'https://picsum.photos/seed/mango/400/300', category_id: 3 },
+    1: { name: 'ผัดไทย', price_thb: 199, imageUrl: 'https://picsum.photos/seed/padthai/400/300', category_id: 1 },
+    2: { name: 'ต้มยำกุ้ง', price_thb: 249, imageUrl: 'https://picsum.photos/seed/tomyum/400/300', category_id: 1 },
+    3: { name: 'แกงเขียวหวาน', price_thb: 189, imageUrl: 'https://picsum.photos/seed/greencurry/400/300', category_id: 1 },
+    4: { name: 'ไก่ย่าง', price_thb: 159, imageUrl: 'https://picsum.photos/seed/chicken/400/300', category_id: 2 },
+    5: { name: 'ข้าวผัด', price_thb: 89, imageUrl: 'https://picsum.photos/seed/friedrice/400/300', category_id: 2 },
+    6: { name: 'ผัดผัก', price_thb: 79, imageUrl: 'https://picsum.photos/seed/veggies/400/300', category_id: 2 },
+    7: { name: 'ชาเย็น', price_thb: 45, imageUrl: 'https://picsum.photos/seed/thaitea/400/300', category_id: 3 },
+    8: { name: 'มะพร้าวอ่อน', price_thb: 55, imageUrl: 'https://picsum.photos/seed/coconut/400/300', category_id: 3 },
+    9: { name: 'สมูทตี้มะม่วง', price_thb: 65, imageUrl: 'https://picsum.photos/seed/mango/400/300', category_id: 3 },
 };
 let nextItemId = 10;
 

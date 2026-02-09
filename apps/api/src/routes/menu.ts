@@ -245,7 +245,7 @@ export async function menuRoutes(fastify: FastifyInstance) {
             return reply.send({
                 restaurant: {
                     name: restaurant.name,
-                    branchName: 'Branch 001',
+                    branchName: 'สาขา 001',
                     tableCode,
                 },
                 categories: categoriesWithItems,

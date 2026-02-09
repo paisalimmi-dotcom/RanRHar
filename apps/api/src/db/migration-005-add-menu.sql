@@ -37,21 +37,21 @@ INSERT INTO restaurants (id, name) VALUES (1, 'RanRHar')
 ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;
 
 INSERT INTO menu_categories (id, restaurant_id, name, sort_order) VALUES
-    (1, 1, 'Recommended', 0),
-    (2, 1, 'Main Dishes', 1),
-    (3, 1, 'Beverages', 2)
+    (1, 1, 'แนะนำ', 0),
+    (2, 1, 'อาหารจานหลัก', 1),
+    (3, 1, 'เครื่องดื่ม', 2)
 ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, sort_order = EXCLUDED.sort_order;
 
 INSERT INTO menu_items (id, category_id, name, price_thb, image_url, sort_order) VALUES
-    (1, 1, 'Signature Pad Thai', 199, 'https://picsum.photos/seed/padthai/400/300', 0),
-    (2, 1, 'Tom Yum Goong', 249, 'https://picsum.photos/seed/tomyum/400/300', 1),
-    (3, 1, 'Green Curry', 189, 'https://picsum.photos/seed/greencurry/400/300', 2),
-    (4, 2, 'Grilled Chicken', 159, 'https://picsum.photos/seed/chicken/400/300', 0),
-    (5, 2, 'Fried Rice', 89, 'https://picsum.photos/seed/friedrice/400/300', 1),
-    (6, 2, 'Stir-Fried Vegetables', 79, 'https://picsum.photos/seed/veggies/400/300', 2),
-    (7, 3, 'Thai Iced Tea', 45, 'https://picsum.photos/seed/thaitea/400/300', 0),
-    (8, 3, 'Fresh Coconut', 55, 'https://picsum.photos/seed/coconut/400/300', 1),
-    (9, 3, 'Mango Smoothie', 65, 'https://picsum.photos/seed/mango/400/300', 2)
+    (1, 1, 'ผัดไทย', 199, 'https://picsum.photos/seed/padthai/400/300', 0),
+    (2, 1, 'ต้มยำกุ้ง', 249, 'https://picsum.photos/seed/tomyum/400/300', 1),
+    (3, 1, 'แกงเขียวหวาน', 189, 'https://picsum.photos/seed/greencurry/400/300', 2),
+    (4, 2, 'ไก่ย่าง', 159, 'https://picsum.photos/seed/chicken/400/300', 0),
+    (5, 2, 'ข้าวผัด', 89, 'https://picsum.photos/seed/friedrice/400/300', 1),
+    (6, 2, 'ผัดผัก', 79, 'https://picsum.photos/seed/veggies/400/300', 2),
+    (7, 3, 'ชาเย็น', 45, 'https://picsum.photos/seed/thaitea/400/300', 0),
+    (8, 3, 'มะพร้าวอ่อน', 55, 'https://picsum.photos/seed/coconut/400/300', 1),
+    (9, 3, 'สมูทตี้มะม่วง', 65, 'https://picsum.photos/seed/mango/400/300', 2)
 ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, price_thb = EXCLUDED.price_thb, image_url = EXCLUDED.image_url;
 
 -- Rollback instructions:
