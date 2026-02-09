@@ -59,9 +59,12 @@ function MenuContent({ initialData }: { initialData: MenuPageProps['initialData'
     const { addToCart } = useCart();
     const [search, setSearch] = useState('');
     const [showStaffLink, setShowStaffLink] = useState(false);
+    const [userRole, setUserRole] = useState<string | null>(null);
     const [lastOrderTableCode, setLastOrderTableCode] = useState<string | null>(null);
     useEffect(() => {
-        setShowStaffLink(!!authStore.getSession());
+        const session = authStore.getSession();
+        setShowStaffLink(!!session);
+        setUserRole(session?.role || null);
         // Check for last order table code
         if (typeof window !== 'undefined') {
             const last = sessionStorage.getItem(LAST_ORDER_TABLE_KEY);
@@ -96,12 +99,22 @@ function MenuContent({ initialData }: { initialData: MenuPageProps['initialData'
                         <div className="flex items-center gap-3">
                             <LanguageToggle />
                             {showStaffLink && (
-                                <Link
-                                    href="/staff"
-                                    className="text-sm text-blue-600 hover:underline font-medium"
-                                >
-                                    {t('common.staff', {}) || 'เจ้าหน้าที่'} →
-                                </Link>
+                                <>
+                                    {(userRole === 'manager' || userRole === 'owner') && (
+                                        <Link
+                                            href="/admin/menu"
+                                            className="text-sm text-blue-600 hover:underline font-medium"
+                                        >
+                                            {t('menu.manageMenu') || 'จัดการเมนู'} →
+                                        </Link>
+                                    )}
+                                    <Link
+                                        href="/staff"
+                                        className="text-sm text-blue-600 hover:underline font-medium"
+                                    >
+                                        {t('common.staff', {}) || 'เจ้าหน้าที่'} →
+                                    </Link>
+                                </>
                             )}
                         </div>
                     </div>
