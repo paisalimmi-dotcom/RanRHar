@@ -1,24 +1,24 @@
 const isProd = process.env.NODE_ENV === 'production';
 
 // Mutable store for menu categories (CRUD in dev)
-let mockCategoriesStore: { id: number; name: string; sort_order: number }[] = [
-    { id: 1, name: 'แนะนำ', sort_order: 0 },
-    { id: 2, name: 'อาหารจานหลัก', sort_order: 1 },
-    { id: 3, name: 'เครื่องดื่ม', sort_order: 2 },
+let mockCategoriesStore: { id: number; name: string; name_en: string; sort_order: number }[] = [
+    { id: 1, name: 'แนะนำ', name_en: 'Recommended', sort_order: 0 },
+    { id: 2, name: 'อาหารจานหลัก', name_en: 'Main Dishes', sort_order: 1 },
+    { id: 3, name: 'เครื่องดื่ม', name_en: 'Beverages', sort_order: 2 },
 ];
 let nextCategoryId = 4;
 
 // Mutable store for menu items (allows owner to edit image/name/price in dev)
-const mockMenuStore: Record<number, { name: string; price_thb: number; imageUrl: string | null; category_id: number }> = {
-    1: { name: 'ผัดไทย', price_thb: 199, imageUrl: 'https://picsum.photos/seed/padthai/400/300', category_id: 1 },
-    2: { name: 'ต้มยำกุ้ง', price_thb: 249, imageUrl: 'https://picsum.photos/seed/tomyum/400/300', category_id: 1 },
-    3: { name: 'แกงเขียวหวาน', price_thb: 189, imageUrl: 'https://picsum.photos/seed/greencurry/400/300', category_id: 1 },
-    4: { name: 'ไก่ย่าง', price_thb: 159, imageUrl: 'https://picsum.photos/seed/chicken/400/300', category_id: 2 },
-    5: { name: 'ข้าวผัด', price_thb: 89, imageUrl: 'https://picsum.photos/seed/friedrice/400/300', category_id: 2 },
-    6: { name: 'ผัดผัก', price_thb: 79, imageUrl: 'https://picsum.photos/seed/veggies/400/300', category_id: 2 },
-    7: { name: 'ชาเย็น', price_thb: 45, imageUrl: 'https://picsum.photos/seed/thaitea/400/300', category_id: 3 },
-    8: { name: 'มะพร้าวอ่อน', price_thb: 55, imageUrl: 'https://picsum.photos/seed/coconut/400/300', category_id: 3 },
-    9: { name: 'สมูทตี้มะม่วง', price_thb: 65, imageUrl: 'https://picsum.photos/seed/mango/400/300', category_id: 3 },
+const mockMenuStore: Record<number, { name: string; name_en: string; price_thb: number; imageUrl: string | null; category_id: number }> = {
+    1: { name: 'ผัดไทย', name_en: 'Pad Thai', price_thb: 199, imageUrl: 'https://picsum.photos/seed/padthai/400/300', category_id: 1 },
+    2: { name: 'ต้มยำกุ้ง', name_en: 'Tom Yum Goong', price_thb: 249, imageUrl: 'https://picsum.photos/seed/tomyum/400/300', category_id: 1 },
+    3: { name: 'แกงเขียวหวาน', name_en: 'Green Curry', price_thb: 189, imageUrl: 'https://picsum.photos/seed/greencurry/400/300', category_id: 1 },
+    4: { name: 'ไก่ย่าง', name_en: 'Grilled Chicken', price_thb: 159, imageUrl: 'https://picsum.photos/seed/chicken/400/300', category_id: 2 },
+    5: { name: 'ข้าวผัด', name_en: 'Fried Rice', price_thb: 89, imageUrl: 'https://picsum.photos/seed/friedrice/400/300', category_id: 2 },
+    6: { name: 'ผัดผัก', name_en: 'Stir-fried Vegetables', price_thb: 79, imageUrl: 'https://picsum.photos/seed/veggies/400/300', category_id: 2 },
+    7: { name: 'ชาเย็น', name_en: 'Thai Iced Tea', price_thb: 45, imageUrl: 'https://picsum.photos/seed/thaitea/400/300', category_id: 3 },
+    8: { name: 'มะพร้าวอ่อน', name_en: 'Young Coconut', price_thb: 55, imageUrl: 'https://picsum.photos/seed/coconut/400/300', category_id: 3 },
+    9: { name: 'สมูทตี้มะม่วง', name_en: 'Mango Smoothie', price_thb: 65, imageUrl: 'https://picsum.photos/seed/mango/400/300', category_id: 3 },
 };
 let nextItemId = 10;
 
@@ -50,13 +50,18 @@ export const mockPool = {
         }
         if (text.includes('restaurants') && text.includes('LIMIT 1')) return { rows: [{ id: 1, name: 'RanRHar' }] };
         if (text.includes('menu_categories') && text.includes('SELECT') && !text.includes('INSERT')) {
-            return { rows: [...mockCategoriesStore].sort((a, b) => a.sort_order - b.sort_order) };
+            const rows = [...mockCategoriesStore].sort((a, b) => a.sort_order - b.sort_order);
+            // If query includes name_en, return it
+            if (text.includes('name_en')) {
+                return { rows: rows.map(cat => ({ ...cat, name_en: cat.name_en || null })) };
+            }
+            return { rows };
         }
         if (text.includes('INSERT INTO menu_categories') && text.includes('RETURNING')) {
             const name = params?.[0] as string;
             const sort_order = (params?.[1] as number) ?? 999;
             const id = nextCategoryId++;
-            mockCategoriesStore.push({ id, name: name || 'New', sort_order });
+            mockCategoriesStore.push({ id, name: name || 'New', name_en: name || 'New', sort_order });
             return { rows: [{ id, name: name || 'New', sort_order }] };
         }
         if (text.includes('UPDATE menu_categories') && text.includes('RETURNING')) {
@@ -79,7 +84,13 @@ export const mockPool = {
             const catId = params?.[0];
             const rows = Object.entries(mockMenuStore)
                 .filter(([, s]) => s.category_id === catId)
-                .map(([id, s]) => ({ id: parseInt(id, 10), name: s.name, priceTHB: s.price_thb, imageUrl: s.imageUrl }));
+                .map(([id, s]) => ({ 
+                    id: parseInt(id, 10), 
+                    name: s.name, 
+                    name_en: s.name_en || null,
+                    priceTHB: s.price_thb, 
+                    imageUrl: s.imageUrl 
+                }));
             return { rows };
         }
         if (text.includes('COUNT') && text.includes('menu_items') && text.includes('category_id')) {
@@ -93,8 +104,8 @@ export const mockPool = {
             const price_thb = params?.[2] as number;
             const imageUrl = (params?.[3] as string) || null;
             const id = nextItemId++;
-            (mockMenuStore as Record<number, { name: string; price_thb: number; imageUrl: string | null; category_id: number }>)[id] = {
-                name: name || 'New Item', price_thb: price_thb ?? 0, imageUrl, category_id: categoryId,
+            (mockMenuStore as Record<number, { name: string; name_en: string; price_thb: number; imageUrl: string | null; category_id: number }>)[id] = {
+                name: name || 'New Item', name_en: name || 'New Item', price_thb: price_thb ?? 0, imageUrl, category_id: categoryId,
             };
             MOCK_MENU_ITEMS.push({ id, price_thb: price_thb ?? 0 });
             return { rows: [{ id, name: name || 'New Item', priceTHB: price_thb ?? 0, imageUrl }] };
