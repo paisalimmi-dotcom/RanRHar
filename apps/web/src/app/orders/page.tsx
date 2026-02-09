@@ -6,6 +6,7 @@ import { StaffNav } from '@/features/auth/components/StaffNav'
 import { orderApi } from '@/features/order/order.api'
 import type { Order, OrderStatus } from '@/shared/types/order'
 import { PaymentModal } from '@/features/payment/components/PaymentModal'
+import { SplitBillModal } from '@/features/payment/components/SplitBillModal'
 import { paymentApi } from '@/features/payment/payment.api'
 import type { PaymentMethod } from '@/shared/types/payment'
 import { CancelOrderModal } from '@/components/CancelOrderModal'
@@ -35,6 +36,7 @@ export default function OrdersPage() {
     const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null)
     const [statusFilter, setStatusFilter] = useState<OrderStatus | 'ALL'>('ALL')
     const [paymentModal, setPaymentModal] = useState<{ orderId: string; total: number } | null>(null)
+    const [splitBillModal, setSplitBillModal] = useState<{ orderId: string; total: number } | null>(null)
     const [cancelModal, setCancelModal] = useState<{ orderId: string; orderStatus: OrderStatus } | null>(null)
 
     useEffect(() => {
@@ -89,6 +91,15 @@ export default function OrdersPage() {
         // Refresh orders to get updated payment (included in GET /orders)
         await loadOrders()
         setPaymentModal(null)
+    }
+
+    async function handleSplitPayment(payments: Array<{ amount: number; method: PaymentMethod; payer?: string; notes?: string }>) {
+        if (!splitBillModal) return
+
+        await paymentApi.splitPayment(splitBillModal.orderId, payments)
+        // Refresh orders to get updated payment
+        await loadOrders()
+        setSplitBillModal(null)
     }
 
     async function handleCancelOrder(reason?: string, refundRequired?: boolean) {
@@ -254,12 +265,20 @@ export default function OrdersPage() {
                                                         <span className="text-xs text-gray-500">({order.payment.method === 'CASH' ? 'เงินสด' : 'QR'})</span>
                                                     </div>
                                                 ) : (
-                                                    <button
-                                                        onClick={() => setPaymentModal({ orderId: order.id, total: order.total })}
-                                                        className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-                                                    >
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => setPaymentModal({ orderId: order.id, total: order.total })}
+                                                            className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                                        >
                                                             บันทึก
-                                                    </button>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setSplitBillModal({ orderId: order.id, total: order.total })}
+                                                            className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                                                        >
+                                                            แยกจ่าย
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -286,6 +305,16 @@ export default function OrdersPage() {
                         isOpen={true}
                         onClose={() => setPaymentModal(null)}
                         onConfirm={handleRecordPayment}
+                    />
+                )}
+
+                {splitBillModal && (
+                    <SplitBillModal
+                        orderId={splitBillModal.orderId}
+                        orderTotal={splitBillModal.total}
+                        isOpen={true}
+                        onClose={() => setSplitBillModal(null)}
+                        onConfirm={handleSplitPayment}
                     />
                 )}
 
