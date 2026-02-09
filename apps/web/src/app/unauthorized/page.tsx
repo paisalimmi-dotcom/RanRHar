@@ -30,7 +30,7 @@ export default function UnauthorizedPage() {
                 </p>
 
                 <button
-                    onClick={() => router.push('/menu/demo-table')}
+                    onClick={() => router.push('/menu/A12')}
                     className="bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700 transition-colors font-medium"
                 >
                     Back to Menu

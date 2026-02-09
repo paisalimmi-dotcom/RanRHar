@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Role } from './auth.types'
 import { authStore } from './auth.store'
+import { LoadingFallback } from '@/components/LoadingFallback'
 
 type AuthGuardProps = {
     children: React.ReactNode
@@ -46,11 +47,11 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
     const isAuthorized = session && allowedRoles.includes(session.role) && validated === true
 
     if (!session || !allowedRoles.includes(session.role)) {
-        return null
+        return <LoadingFallback />
     }
 
     if (validated === false || validated === null) {
-        return null
+        return <LoadingFallback />
     }
 
     return <>{children}</>
