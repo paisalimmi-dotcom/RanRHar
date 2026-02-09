@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { pool } from '../db';
+import { ApiError, Errors } from '../lib/errors';
 import { authMiddleware, requireRole } from '../middleware/auth';
 
 interface CreateItemRequest {
@@ -35,7 +36,10 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
             return reply.send({ items: result.rows });
         } catch (error) {
             request.log.error({ err: error }, 'Get inventory error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to retrieve inventory');
         }
     });
 
@@ -48,7 +52,13 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
         const { name, quantity, unit, minQuantity } = request.body;
 
         if (!name || typeof quantity !== 'number' || !unit || typeof minQuantity !== 'number') {
-            return reply.status(400).send({ error: 'Missing required fields' });
+            throw Errors.validation.required('name, quantity, unit, minQuantity');
+        }
+        if (quantity < 0) {
+            throw Errors.inventory.invalidQuantity(quantity);
+        }
+        if (minQuantity < 0) {
+            throw Errors.inventory.invalidQuantity(minQuantity);
         }
 
         const client = await pool.connect();
@@ -78,7 +88,10 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
         } catch (error) {
             await client.query('ROLLBACK');
             request.log.error({ err: error }, 'Create inventory item error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to create inventory item');
         } finally {
             client.release();
         }
@@ -92,7 +105,16 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
         preHandler: [authMiddleware, requireRole('manager', 'staff')],
     }, async (request, reply) => {
         const { id } = request.params;
+        const itemId = parseInt(id, 10);
+        if (isNaN(itemId) || itemId < 1) {
+            throw Errors.validation.invalidId(id);
+        }
+
         const { name, minQuantity, adjustment } = request.body;
+
+        if (minQuantity !== undefined && minQuantity < 0) {
+            throw Errors.inventory.invalidQuantity(minQuantity);
+        }
 
         const client = await pool.connect();
         try {
@@ -113,7 +135,7 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
                     values.push(minQuantity);
                 }
 
-                values.push(id);
+                values.push(itemId);
                 await client.query(
                     `UPDATE inventory_items SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramIndex}`,
                     values
@@ -125,7 +147,7 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
                 const { type, quantity, reason } = adjustment;
 
                 if (!['IN', 'OUT', 'ADJUST'].includes(type) || typeof quantity !== 'number' || quantity <= 0) {
-                    throw new Error('Invalid adjustment data');
+                    throw Errors.validation.invalidFormat('adjustment', 'valid type (IN/OUT/ADJUST) and positive quantity');
                 }
 
                 // Calculate numeric change
@@ -138,18 +160,18 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
                      SET quantity = quantity + $1, updated_at = CURRENT_TIMESTAMP 
                      WHERE id = $2
                      RETURNING quantity`,
-                    [change, id]
+                    [change, itemId]
                 );
 
                 if (updateRes.rows.length === 0) {
-                    throw new Error('Item not found');
+                    throw Errors.inventory.itemNotFound(id);
                 }
 
                 // Record movement
                 await client.query(
                     `INSERT INTO stock_movements (item_id, type, quantity, reason, created_by)
                      VALUES ($1, $2, $3, $4, $5)`,
-                    [id, type, quantity, reason, request.user!.userId]
+                    [itemId, type, quantity, reason, request.user!.userId]
                 );
             }
 
@@ -157,7 +179,7 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
 
             const finalResult = await pool.query(
                 `SELECT id, name, quantity, unit, min_quantity as "minQuantity" FROM inventory_items WHERE id = $1`,
-                [id]
+                [itemId]
             );
 
             return reply.send(finalResult.rows[0]);
@@ -165,9 +187,17 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
             await client.query('ROLLBACK');
             request.log.error({ err: error }, 'Update inventory error');
             const errorMessage = error instanceof Error ? error.message : '';
-            if (errorMessage === 'Item not found') return reply.status(404).send({ error: 'Item not found' });
-            if (errorMessage === 'Invalid adjustment data') return reply.status(400).send({ error: errorMessage });
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (errorMessage === 'Item not found') {
+                const itemId = (request.params as { id: string }).id;
+                throw Errors.inventory.itemNotFound(itemId);
+            }
+            if (errorMessage === 'Invalid adjustment data') {
+                throw Errors.validation.invalidFormat('adjustment data', 'valid format');
+            }
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to adjust inventory stock');
         } finally {
             client.release();
         }
@@ -180,6 +210,10 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
         preHandler: [authMiddleware, requireRole('manager', 'staff')],
     }, async (request, reply) => {
         const { id } = request.params;
+        const itemId = parseInt(id, 10);
+        if (isNaN(itemId) || itemId < 1) {
+            throw Errors.validation.invalidId(id);
+        }
 
         try {
             const result = await pool.query(
@@ -189,7 +223,7 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
                  WHERE sm.item_id = $1
                  ORDER BY sm.created_at DESC
                  LIMIT 50`,
-                [id]
+                [itemId]
             );
 
             return reply.send({ movements: result.rows });

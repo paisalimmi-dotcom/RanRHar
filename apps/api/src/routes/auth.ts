@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { pool } from '../db';
 import { auditLog } from '../lib/audit';
 import { incrementLogins, incrementFailedLogins } from '../lib/metrics';
+import { ApiError, Errors } from '../lib/errors';
 import { generateToken, authMiddleware } from '../middleware/auth';
 import { LoginBodySchema } from '../schemas';
 
@@ -23,7 +24,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         const { email, password } = request.body as { email: string; password: string };
 
         if (!email || !password) {
-            return reply.status(400).send({ error: 'Email and password are required' });
+            throw Errors.validation.required('email and password');
         }
 
         try {
@@ -36,7 +37,7 @@ export async function authRoutes(fastify: FastifyInstance) {
             if (result.rows.length === 0) {
                 await auditLog({ action: 'auth.failed_login', entityType: 'user', actorEmail: email, metadata: { reason: 'user_not_found' }, ip: request.ip });
                 incrementFailedLogins();
-                return reply.status(401).send({ error: 'Invalid credentials' });
+                throw Errors.auth.invalidCredentials();
             }
 
             const user = result.rows[0];
@@ -45,7 +46,7 @@ export async function authRoutes(fastify: FastifyInstance) {
             if (user.role === 'guest') {
                 await auditLog({ action: 'auth.failed_login', entityType: 'user', actorEmail: email, metadata: { reason: 'guest_role' }, ip: request.ip });
                 incrementFailedLogins();
-                return reply.status(401).send({ error: 'Invalid credentials' });
+                throw Errors.auth.invalidCredentials();
             }
 
             // Verify password
@@ -54,7 +55,7 @@ export async function authRoutes(fastify: FastifyInstance) {
             if (!isValid) {
                 await auditLog({ action: 'auth.failed_login', entityType: 'user', actorEmail: email, metadata: { reason: 'invalid_password' }, ip: request.ip });
                 incrementFailedLogins();
-                return reply.status(401).send({ error: 'Invalid credentials' });
+                throw Errors.auth.invalidCredentials();
             }
 
             await auditLog({ action: 'auth.login', entityType: 'user', entityId: String(user.id), actorId: user.id, actorEmail: user.email, ip: request.ip });
@@ -85,7 +86,10 @@ export async function authRoutes(fastify: FastifyInstance) {
             });
         } catch (error) {
             request.log.error({ err: error }, 'Login error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to process login');
         }
     });
 
@@ -108,7 +112,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         preHandler: authMiddleware,
     }, async (request, reply) => {
         if (!request.user) {
-            return reply.status(401).send({ error: 'Unauthorized' });
+            throw Errors.auth.required();
         }
 
         return reply.send({
