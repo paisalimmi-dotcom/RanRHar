@@ -15,8 +15,13 @@ Free & Freemium Restaurant Operating System
 - **Feature-09**: Inventory Management
 - **Feature-10 (Part 1)**: E2E Testing, Project Adjustment, Cashier /orders access
 
+### ✅ Olympic Refactor (2026-02-08)
+- Error Boundary, 404, Loading skeletons
+- Empty states, Accessibility (aria-labels)
+- API consistency (menu.service → apiClient)
+- [TRIAL_GUIDE.md](docs/TRIAL_GUIDE.md) — คู่มือทดลองใช้งาน
+
 ### 🚧 Planned
-- **Feature-10 Part 2**: KDS, Menu Management, Performance
 - **Multi-branch**: อนาคต
 
 ### 🔒 Security: **9.5/10** (World-Class)
@@ -66,5 +71,5 @@ pnpm test:coverage
 ---
 
 **Last Updated**: 2026-02-08
-**Phase**: 10 (Project Adjustment Complete)
-**Next**: KDS, Menu Management, Performance
+**Phase**: Olympic Refactor Complete
+**Next**: Multi-branch, Production deployment

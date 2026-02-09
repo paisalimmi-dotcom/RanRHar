@@ -16,14 +16,14 @@
 
 ---
 
-## Phase 0: Baseline (ก่อน Refactor)
+## Phase 0: Baseline (ก่อน Refactor) ✅
 
 - Build ✅ | Tests 56 ✅
 - Commit สถานะปัจจุบันก่อนเริ่ม refactor
 
 ---
 
-## Phase 1: Foundation — Error Boundary & Core Robustness
+## Phase 1: Foundation — Error Boundary & Core Robustness ✅
 
 | รายการ | คำอธิบาย |
 |--------|----------|
@@ -32,11 +32,11 @@
 | Global Loading | Skeleton หรือ loading indicator สำหรับการนำทาง |
 | API Error Display | แสดงข้อความ error ที่ user-friendly |
 
-**เกณฑ์ผ่าน:** Error ที่เกิดไม่ทำให้แอป crash, user เห็นข้อความที่เข้าใจได้
+**เกณฑ์ผ่าน:** Error ที่เกิดไม่ทำให้แอป crash, user เห็นข้อความที่เข้าใจได้ ✅
 
 ---
 
-## Phase 2: Code Quality — Structure & Consistency
+## Phase 2: Code Quality — Structure & Consistency ✅
 
 | รายการ | คำอธิบาย |
 |--------|----------|
@@ -45,11 +45,11 @@
 | Loading States | ทุกหน้า/component ที่ fetch มี loading state |
 | Type Safety | ตรวจสอบ shared types ครบ |
 
-**เกณฑ์ผ่าน:** Lint ผ่าน, โครงสร้าง feature สม่ำเสมอ
+**เกณฑ์ผ่าน:** Lint ผ่าน, โครงสร้าง feature สม่ำเสมอ ✅
 
 ---
 
-## Phase 3: UX/UI Polish — Trial-Ready
+## Phase 3: UX/UI Polish — Trial-Ready ✅
 
 | รายการ | คำอธิบาย |
 |--------|----------|
@@ -59,11 +59,11 @@
 | Accessibility | aria-labels, focus states, contrast |
 | Toast/Feedback | แจ้งผลสำเร็จ/ล้มเหลวให้ user เห็น |
 
-**เกณฑ์ผ่าน:** ลูกค้าทดลองใช้งานได้ลื่นไหล ไม่สับสน
+**เกณฑ์ผ่าน:** ลูกค้าทดลองใช้งานได้ลื่นไหล ไม่สับสน ✅
 
 ---
 
-## Phase 4: Performance & Reliability
+## Phase 4: Performance & Reliability ✅
 
 | รายการ | คำอธิบาย |
 |--------|----------|
@@ -72,11 +72,11 @@
 | Lazy Load | dynamic import สำหรับหน้ามือถือ |
 | Error Boundary per Route | จำกัด scope error |
 
-**เกณฑ์ผ่าน:** Lighthouse score ดี, โหลดเร็ว
+**เกณฑ์ผ่าน:** Lighthouse score ดี, โหลดเร็ว ✅
 
 ---
 
-## Phase 5: Documentation & Launch Prep
+## Phase 5: Documentation & Launch Prep ✅
 
 | รายการ | คำอธิบาย |
 |--------|----------|
@@ -85,7 +85,7 @@
 | CHANGELOG | สรุปการเปลี่ยนแปลง |
 | Final Checklist | ตรวจสอบก่อน trial launch |
 
-**เกณฑ์ผ่าน:** ทีมหรือลูกค้าสามารถเริ่มใช้ได้จาก docs
+**เกณฑ์ผ่าน:** ทีมหรือลูกค้าสามารถเริ่มใช้ได้จาก docs ✅
 
 ---
 
