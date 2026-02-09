@@ -7,6 +7,8 @@ import { CartProvider, useCart, CartSummary } from '../../cart';
 import { authStore } from '../../auth/auth.store';
 import type { MenuCategory, MenuItem, RestaurantInfo } from '../types';
 import { TableWarningBanner } from '@/components/TableWarningBanner';
+import { LanguageToggle } from '@/components/LanguageToggle';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
 const TABLE_CODE_KEY = 'ranrhar_table_code';
 const LAST_ORDER_TABLE_KEY = 'lastOrderTableCode';
@@ -21,6 +23,8 @@ type MenuPageProps = {
 
 
 function MenuContent({ data }: { data: MenuPageProps['initialData'] }) {
+    const { t } = useI18n();
+    
     useEffect(() => {
         if (data?.restaurant?.tableCode) {
             sessionStorage.setItem(TABLE_CODE_KEY, data.restaurant.tableCode);
@@ -64,18 +68,21 @@ function MenuContent({ data }: { data: MenuPageProps['initialData'] }) {
             <header className="sticky top-0 z-20 bg-white shadow-sm border-b border-gray-100">
                 <div className="max-w-4xl mx-auto px-4 py-4">
                     <div className="flex justify-between items-center mb-3">
-                        <h1 className="text-2xl font-bold text-gray-900">เมนู</h1>
-                        {showStaffLink && (
-                            <Link
-                                href="/staff"
-                                className="text-sm text-blue-600 hover:underline font-medium"
-                            >
-                                เจ้าหน้าที่ →
-                            </Link>
-                        )}
+                        <h1 className="text-2xl font-bold text-gray-900">{t('menu.title')}</h1>
+                        <div className="flex items-center gap-3">
+                            <LanguageToggle />
+                            {showStaffLink && (
+                                <Link
+                                    href="/staff"
+                                    className="text-sm text-blue-600 hover:underline font-medium"
+                                >
+                                    {t('common.staff', {}) || 'เจ้าหน้าที่'} →
+                                </Link>
+                            )}
+                        </div>
                     </div>
                     <div className="text-sm text-gray-600 mb-3">
-                        <span>โต๊ะ {restaurant.tableCode}</span>
+                        <span>{t('common.table')} {restaurant.tableCode}</span>
                         <span className="mx-2">·</span>
                         <span>{restaurant.name}</span>
                         <span className="mx-2">·</span>
@@ -87,7 +94,7 @@ function MenuContent({ data }: { data: MenuPageProps['initialData'] }) {
                         <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">🔍</span>
                         <input
                             type="text"
-                            placeholder="ค้นหาเมนู..."
+                            placeholder={t('menu.searchPlaceholder')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 outline-none transition-all"
@@ -166,6 +173,7 @@ function CategorySection({
     onToggleExpand: () => void;
     itemsPerPage: number;
 }) {
+    const { t } = useI18n();
     const items = category.items;
     const hasMore = items.length > itemsPerPage;
     const displayItems = hasMore && !expanded ? items.slice(0, itemsPerPage) : items;
@@ -188,7 +196,7 @@ function CategorySection({
                     onClick={onToggleExpand}
                     className="mt-4 w-full py-3 text-blue-600 font-medium rounded-xl border-2 border-dashed border-blue-200 hover:bg-blue-50 transition-colors"
                 >
-                    โหลดเพิ่ม ({remaining} รายการ)
+                    {t('common.loadMore', { count: remaining }) || `โหลดเพิ่ม (${remaining} รายการ)`}
                 </button>
             )}
             {hasMore && expanded && (
@@ -197,7 +205,7 @@ function CategorySection({
                     onClick={onToggleExpand}
                     className="mt-4 text-sm text-gray-500 hover:text-gray-700"
                 >
-                    ย่อเมนู
+                    {t('common.collapse') || 'ย่อเมนู'}
                 </button>
             )}
         </section>
@@ -205,6 +213,7 @@ function CategorySection({
 }
 
 function MenuItemCard({ item, onAdd }: { item: MenuItem; onAdd: () => void }) {
+    const { t } = useI18n();
     return (
         <div
             className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group"
@@ -242,7 +251,7 @@ function MenuItemCard({ item, onAdd }: { item: MenuItem; onAdd: () => void }) {
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onAdd(); }}
                         className="px-4 py-2 rounded-xl bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 active:scale-95 transition-all"
-                        aria-label={`เพิ่ม ${item.name} เข้าตะกร้า`}
+                        aria-label={`${t('common.add')} ${item.name}`}
                     >
                         เพิ่ม
                     </button>

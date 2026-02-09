@@ -1,0 +1,116 @@
+{
+  "common": {
+    "menu": "เมนู",
+    "table": "โต๊ะ",
+    "branch": "สาขา",
+    "search": "ค้นหา",
+    "add": "เพิ่ม",
+    "total": "รวมทั้งหมด",
+    "subtotal": "ยอดรวม",
+    "back": "กลับ",
+    "cancel": "ยกเลิก",
+    "confirm": "ยืนยัน",
+    "loading": "กำลังโหลด...",
+    "refresh": "รีเฟรช",
+    "save": "บันทึก",
+    "edit": "แก้ไข",
+    "delete": "ลบ",
+    "staff": "เจ้าหน้าที่",
+    "loadMore": "โหลดเพิ่ม ({count} รายการ)",
+    "collapse": "ย่อเมนู"
+  },
+  "menu": {
+    "title": "เมนู",
+    "searchPlaceholder": "ค้นหาเมนู...",
+    "categories": {
+      "recommended": "แนะนำ",
+      "mainDishes": "อาหารจานหลัก",
+      "beverages": "เครื่องดื่ม"
+    },
+    "items": {
+      "padThai": "ผัดไทย",
+      "tomYumGoong": "ต้มยำกุ้ง",
+      "greenCurry": "แกงเขียวหวาน",
+      "grilledChicken": "ไก่ย่าง",
+      "friedRice": "ข้าวผัด",
+      "stirFriedVegetables": "ผัดผัก",
+      "thaiIcedTea": "ชาเย็น",
+      "freshCoconut": "มะพร้าวอ่อน",
+      "mangoSmoothie": "สมูทตี้มะม่วง"
+    }
+  },
+  "checkout": {
+    "title": "สั่งอาหาร",
+    "orderSummary": "สรุปรายการ",
+    "placeOrder": "สั่งอาหาร",
+    "placingOrder": "กำลังสั่งอาหาร...",
+    "backToMenu": "← กลับไปเมนู"
+  },
+  "order": {
+    "confirmed": "สั่งอาหารสำเร็จ!",
+    "orderId": "เลขออเดอร์",
+    "placedOn": "สั่งเมื่อ",
+    "orderItems": "รายการอาหาร",
+    "notFound": "ไม่พบออเดอร์",
+    "notFoundMessage": "ออเดอร์ที่คุณค้นหาอาจถูกลบหรือไม่ถูกต้อง",
+    "backToMenu": "กลับไปเมนู",
+    "viewStatus": "ดูสถานะออเดอร์"
+  },
+  "orderStatus": {
+    "pending": "รอทำอาหาร",
+    "confirmed": "กำลังทำอาหาร",
+    "completed": "เสร็จแล้ว",
+    "cancelled": "ยกเลิกแล้ว",
+    "autoRefresh": "อัปเดตอัตโนมัติทุก 30 วินาที",
+    "cancelOrder": "ยกเลิกออเดอร์",
+    "orderMore": "สั่งเพิ่ม"
+  },
+  "orders": {
+    "title": "จัดการออเดอร์",
+    "showing": "แสดง {count} จาก {total} ออเดอร์",
+    "all": "ทั้งหมด",
+    "pending": "รอทำ",
+    "confirmed": "กำลังทำ",
+    "completed": "เสร็จแล้ว",
+    "cancelled": "ยกเลิกแล้ว",
+    "orderId": "เลขออเดอร์",
+    "items": "รายการ",
+    "status": "สถานะ",
+    "payment": "การชำระเงิน",
+    "created": "สร้างเมื่อ",
+    "actions": "การดำเนินการ",
+    "paid": "จ่ายแล้ว",
+    "record": "บันทึก",
+    "cancel": "ยกเลิก"
+  },
+  "cancelOrder": {
+    "title": "ยกเลิกออเดอร์ #{id}",
+    "warning": "ออเดอร์นี้อยู่ในสถานะ {status} การยกเลิกต้องได้รับการอนุมัติจากผู้จัดการ",
+    "reason": "เหตุผลในการยกเลิก",
+    "reasonRequired": "กรุณาระบุเหตุผลในการยกเลิกออเดอร์...",
+    "reasonHint": "เช่น อาหารมีปัญหา, ลูกค้าไม่พอใจ, ต้องทำให้ใหม่",
+    "refundRequired": "ต้องคืนเงิน (Refund Required)",
+    "refundHint": "เลือกถ้าลูกค้าชำระเงินแล้วและต้องคืนเงิน",
+    "confirmCancel": "ยืนยันยกเลิก",
+    "cancelling": "กำลังยกเลิก..."
+  },
+  "tableWarning": {
+    "title": "คุณเคยสั่งอาหารจากโต๊ะ {lastTable}",
+    "subtitle": "ตอนนี้คุณอยู่ที่โต๊ะ {currentTable}"
+  },
+  "confirmTableChange": {
+    "title": "ยืนยันการสั่งอาหาร",
+    "message": "คุณกำลังสั่งอาหารไปที่ <strong>โต๊ะ {currentTable}</strong><br/>แต่คุณเคยสั่งอาหารจาก <strong>โต๊ะ {lastTable}</strong><br/><br/>คุณต้องการสั่งไปที่โต๊ะ {currentTable} จริงหรือไม่?"
+  },
+  "staff": {
+    "kds": "KDS — Kitchen Display",
+    "tables": "สรุปโต๊ะ — พนักงานเสิร์ฟ",
+    "autoUpdate": "อัปเดตอัตโนมัติทุก {seconds} วินาที",
+    "waiting": "รออาหาร",
+    "cooking": "กำลังทำ",
+    "done": "เสร็จแล้ว",
+    "paid": "จ่ายแล้ว",
+    "allOrders": "ออเดอร์ทั้งหมด",
+    "paidOrders": "จ่ายแล้ว"
+  }
+}

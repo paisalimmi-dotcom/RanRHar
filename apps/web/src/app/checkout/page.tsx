@@ -8,11 +8,14 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AuthGuard } from '@/features/auth';
 import { ConfirmTableChangeModal } from '@/components/ConfirmTableChangeModal';
+import { useI18n } from '@/lib/i18n/I18nProvider';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
 const TABLE_CODE_KEY = 'ranrhar_table_code';
 const LAST_ORDER_TABLE_KEY = 'lastOrderTableCode';
 
 function CheckoutContent() {
+    const { t } = useI18n();
     const { items, totalItems, totalPrice, clearCart, isInitialized } = useCart();
     const router = useRouter();
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
@@ -87,9 +90,12 @@ function CheckoutContent() {
                 padding: '24px',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
             }}>
-                <h1 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '24px' }}>
-                    สั่งอาหาร
-                </h1>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                    <h1 style={{ fontSize: '24px', fontWeight: '700' }}>
+                        {t('checkout.title')}
+                    </h1>
+                    <LanguageToggle />
+                </div>
 
                 {orderError && (
                     <div style={{ marginBottom: '16px', padding: '12px', background: '#fee', color: '#c00', borderRadius: '8px', fontSize: '14px' }}>
@@ -100,7 +106,7 @@ function CheckoutContent() {
                 {/* Order Items */}
                 <div style={{ marginBottom: '24px' }}>
                     <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#666' }}>
-                        สรุปรายการ
+                        {t('checkout.orderSummary')}
                     </h2>
                     {items.map((item) => (
                         <div
@@ -138,7 +144,7 @@ function CheckoutContent() {
                         justifyContent: 'space-between',
                         marginBottom: '8px'
                     }}>
-                        <span style={{ fontSize: '14px', color: '#666' }}>ยอดรวม</span>
+                        <span style={{ fontSize: '14px', color: '#666' }}>{t('common.subtotal')}</span>
                         <span style={{ fontWeight: '600' }}>฿{totalPrice}</span>
                     </div>
                     <div style={{
@@ -147,7 +153,7 @@ function CheckoutContent() {
                         fontSize: '20px',
                         fontWeight: '700'
                     }}>
-                        <span>รวมทั้งหมด</span>
+                        <span>{t('common.total')}</span>
                         <span>฿{totalPrice}</span>
                     </div>
                 </div>
@@ -174,7 +180,7 @@ function CheckoutContent() {
                     onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 >
-                    {isPlacingOrder ? 'กำลังสั่งอาหาร...' : 'สั่งอาหาร'}
+                    {isPlacingOrder ? t('checkout.placingOrder') : t('checkout.placeOrder')}
                 </button>
 
                 {/* Back Link */}
@@ -193,7 +199,7 @@ function CheckoutContent() {
                             textDecoration: 'underline'
                         }}
                     >
-                        ← กลับไปเมนู
+                        {t('checkout.backToMenu')}
                     </button>
                 </div>
             </div>

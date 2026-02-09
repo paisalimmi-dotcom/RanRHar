@@ -1,0 +1,116 @@
+{
+  "common": {
+    "menu": "Menu",
+    "table": "Table",
+    "branch": "Branch",
+    "search": "Search",
+    "add": "Add",
+    "total": "Total",
+    "subtotal": "Subtotal",
+    "back": "Back",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "refresh": "Refresh",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "staff": "Staff",
+    "loadMore": "Load More ({count} items)",
+    "collapse": "Collapse"
+  },
+  "menu": {
+    "title": "Menu",
+    "searchPlaceholder": "Search menu...",
+    "categories": {
+      "recommended": "Recommended",
+      "mainDishes": "Main Dishes",
+      "beverages": "Beverages"
+    },
+    "items": {
+      "padThai": "Signature Pad Thai",
+      "tomYumGoong": "Tom Yum Goong",
+      "greenCurry": "Green Curry",
+      "grilledChicken": "Grilled Chicken",
+      "friedRice": "Fried Rice",
+      "stirFriedVegetables": "Stir-Fried Vegetables",
+      "thaiIcedTea": "Thai Iced Tea",
+      "freshCoconut": "Fresh Coconut",
+      "mangoSmoothie": "Mango Smoothie"
+    }
+  },
+  "checkout": {
+    "title": "Checkout",
+    "orderSummary": "Order Summary",
+    "placeOrder": "Place Order",
+    "placingOrder": "Placing Order...",
+    "backToMenu": "← Back to Menu"
+  },
+  "order": {
+    "confirmed": "Order Confirmed!",
+    "orderId": "Order ID",
+    "placedOn": "Order placed on",
+    "orderItems": "Order Items",
+    "notFound": "Order Not Found",
+    "notFoundMessage": "The order you're looking for doesn't exist or has been removed.",
+    "backToMenu": "Back to Menu",
+    "viewStatus": "View Order Status"
+  },
+  "orderStatus": {
+    "pending": "Pending",
+    "confirmed": "Preparing",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "autoRefresh": "Auto-refresh every 30 seconds",
+    "cancelOrder": "Cancel Order",
+    "orderMore": "Order More"
+  },
+  "orders": {
+    "title": "Order Management",
+    "showing": "Showing {count} of {total} orders",
+    "all": "All Orders",
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "orderId": "Order ID",
+    "items": "Items",
+    "status": "Status",
+    "payment": "Payment",
+    "created": "Created",
+    "actions": "Actions",
+    "paid": "PAID",
+    "record": "Record",
+    "cancel": "Cancel"
+  },
+  "cancelOrder": {
+    "title": "Cancel Order #{id}",
+    "warning": "This order is in {status} status. Cancellation requires manager approval.",
+    "reason": "Cancellation Reason",
+    "reasonRequired": "Please specify the reason for cancellation...",
+    "reasonHint": "e.g., Food quality issue, Customer complaint, Need to remake",
+    "refundRequired": "Refund Required",
+    "refundHint": "Select if customer has paid and requires refund",
+    "confirmCancel": "Confirm Cancel",
+    "cancelling": "Cancelling..."
+  },
+  "tableWarning": {
+    "title": "You previously ordered from Table {lastTable}",
+    "subtitle": "You are currently at Table {currentTable}"
+  },
+  "confirmTableChange": {
+    "title": "Confirm Order",
+    "message": "You are ordering for <strong>Table {currentTable}</strong><br/>but you previously ordered from <strong>Table {lastTable}</strong><br/><br/>Do you want to proceed with Table {currentTable}?"
+  },
+  "staff": {
+    "kds": "KDS — Kitchen Display",
+    "tables": "Table Summary — Server",
+    "autoUpdate": "Auto-update every {seconds} seconds",
+    "waiting": "Waiting",
+    "cooking": "Cooking",
+    "done": "Done",
+    "paid": "Paid",
+    "allOrders": "All Orders",
+    "paidOrders": "Paid"
+  }
+}
