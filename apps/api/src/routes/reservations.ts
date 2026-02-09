@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { Type } from '@sinclair/typebox';
 import { pool } from '../db';
 import { auditLog } from '../lib/audit';
+import { ApiError, Errors } from '../lib/errors';
 import { authMiddleware, requireRole } from '../middleware/auth';
 
 export async function reservationRoutes(fastify: FastifyInstance) {
@@ -52,13 +53,13 @@ export async function reservationRoutes(fastify: FastifyInstance) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             if (resDate < today) {
-                return reply.status(400).send({ error: 'Reservation date cannot be in the past' });
+                throw Errors.reservation.invalidDate(reservationDate);
             }
 
             // Validate reservation time is reasonable (e.g., within business hours)
             const [hours, minutes] = reservationTime.split(':').map(Number);
             if (hours < 8 || hours > 22) {
-                return reply.status(400).send({ error: 'Reservation time must be between 08:00 and 22:00' });
+                throw Errors.reservation.invalidTime(reservationTime);
             }
 
             const result = await pool.query(
@@ -92,7 +93,10 @@ export async function reservationRoutes(fastify: FastifyInstance) {
             });
         } catch (error) {
             request.log.error({ err: error }, 'Create reservation error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to create reservation');
         }
     });
 
@@ -184,6 +188,10 @@ export async function reservationRoutes(fastify: FastifyInstance) {
         },
     }, async (request, reply) => {
         const { id } = request.params as { id: string };
+        const reservationId = parseInt(id, 10);
+        if (isNaN(reservationId) || reservationId < 1) {
+            throw Errors.validation.invalidId(id);
+        }
 
         try {
             const result = await pool.query(
@@ -192,11 +200,11 @@ export async function reservationRoutes(fastify: FastifyInstance) {
                         created_at, updated_at, created_by, confirmed_by, confirmed_at
                  FROM reservations
                  WHERE id = $1`,
-                [id]
+                [reservationId]
             );
 
             if (result.rows.length === 0) {
-                return reply.status(404).send({ error: 'Reservation not found' });
+                throw Errors.reservation.notFound(id);
             }
 
             const r = result.rows[0];
@@ -219,7 +227,10 @@ export async function reservationRoutes(fastify: FastifyInstance) {
             });
         } catch (error) {
             request.log.error({ err: error }, 'Get reservation error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to retrieve reservation');
         }
     });
 
@@ -242,6 +253,11 @@ export async function reservationRoutes(fastify: FastifyInstance) {
         },
     }, async (request, reply) => {
         const { id } = request.params as { id: string };
+        const reservationId = parseInt(id, 10);
+        if (isNaN(reservationId) || reservationId < 1) {
+            throw Errors.validation.invalidId(id);
+        }
+
         const { status } = request.body as { status: 'PENDING' | 'CONFIRMED' | 'SEATED' | 'CANCELLED' | 'COMPLETED' };
 
         try {
@@ -256,12 +272,12 @@ export async function reservationRoutes(fastify: FastifyInstance) {
             }
 
             query += ` WHERE id = $${paramIndex++} RETURNING id, table_code, customer_name, reservation_date, reservation_time, status, confirmed_by, confirmed_at`;
-            params.push(id);
+            params.push(reservationId);
 
             const result = await pool.query(query, params);
 
             if (result.rows.length === 0) {
-                return reply.status(404).send({ error: 'Reservation not found' });
+                throw Errors.reservation.notFound(id);
             }
 
             const reservation = result.rows[0];
@@ -296,6 +312,10 @@ export async function reservationRoutes(fastify: FastifyInstance) {
         },
     }, async (request, reply) => {
         const { id } = request.params as { id: string };
+        const reservationId = parseInt(id, 10);
+        if (isNaN(reservationId) || reservationId < 1) {
+            throw Errors.validation.invalidId(id);
+        }
 
         try {
             // Instead of deleting, update status to CANCELLED
@@ -304,11 +324,11 @@ export async function reservationRoutes(fastify: FastifyInstance) {
                  SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP
                  WHERE id = $1
                  RETURNING id`,
-                [id]
+                [reservationId]
             );
 
             if (result.rows.length === 0) {
-                return reply.status(404).send({ error: 'Reservation not found' });
+                throw Errors.reservation.notFound(id);
             }
 
             await auditLog({
@@ -322,7 +342,10 @@ export async function reservationRoutes(fastify: FastifyInstance) {
             return reply.status(204).send();
         } catch (error) {
             request.log.error({ err: error }, 'Cancel reservation error');
-            return reply.status(500).send({ error: 'Internal server error' });
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw Errors.system.internal('Failed to cancel reservation');
         }
     });
 }
