@@ -53,10 +53,11 @@
 
 ## Phase 2: Routes ที่ต้อง Refactor ต่อ
 
-### 2.1 Menu Routes (`apps/api/src/routes/menu.ts`)
-- [ ] แทนที่ error responses ด้วย `Errors.menu.*`
-- [ ] เพิ่ม ID validation
-- [ ] Standardize error handling
+### 2.1 Menu Routes (`apps/api/src/routes/menu.ts`) ✅
+- [x] แทนที่ error responses ด้วย `Errors.menu.*`
+- [x] เพิ่ม ID validation
+- [x] Standardize error handling
+- [x] เพิ่ม price validation
 
 ### 2.2 Payment Routes (`apps/api/src/routes/payments.ts`)
 - [ ] แทนที่ error responses ด้วย `Errors.payment.*`
