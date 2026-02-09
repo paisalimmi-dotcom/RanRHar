@@ -1,21 +1,52 @@
-import Link from 'next/link';
+'use client';
 
-/**
- * หน้าสำหรับเจ้าหน้าที่ — เข้าสู่ระบบ, รายการออเดอร์, จัดการสต็อก
- */
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { authStore } from '@/features/auth/auth.store';
+
+import type { Role } from '@/features/auth/auth.types';
+
+type NavLink = {
+    href: string;
+    label: string;
+    desc: string;
+    icon: string;
+    roles?: Role[];
+};
+
+const ALL_LINKS: NavLink[] = [
+    { href: '/menu/A12', label: 'ดูเมนู', desc: 'สั่งอาหารที่โต๊ะ', icon: '◉' },
+    { href: '/login', label: 'เข้าสู่ระบบ', desc: 'Staff · Manager · Cashier · Chef · Host · Delivery', icon: '◆' },
+    { href: '/staff/kds', label: 'KDS (ครัว)', desc: 'หน้าจอแสดงออเดอร์สำหรับพ่อครัว', icon: '🍳', roles: ['manager', 'staff', 'chef'] },
+    { href: '/orders', label: 'รายการออเดอร์', desc: 'จัดการคำสั่งซื้อ บันทึกการชำระ', icon: '○', roles: ['owner', 'manager', 'staff', 'cashier', 'chef', 'host', 'delivery'] },
+    { href: '/inventory', label: 'จัดการสต็อก', desc: 'คลังสินค้าและวัตถุดิบ', icon: '◇', roles: ['manager', 'staff'] },
+    { href: '/staff/tables', label: 'สรุปโต๊ะ', desc: 'ออเดอร์ตามสถานะ สำหรับพนักงานเสิร์ฟ', icon: '◎', roles: ['owner', 'manager', 'staff', 'cashier', 'host', 'delivery'] },
+    { href: '/admin', label: 'Admin', desc: 'จัดการเมนู ตั้งค่าร้าน', icon: '⚙', roles: ['owner', 'manager'] },
+];
+
 export default function StaffPage() {
-    const links = [
-        { href: '/menu/A12', label: 'ดูเมนู', desc: 'สั่งอาหารที่โต๊ะ A12', icon: '◉' },
-        { href: '/login', label: 'เข้าสู่ระบบ', desc: 'Staff · Owner · Cashier', icon: '◆' },
-        { href: '/staff/kds', label: 'KDS (ครัว)', desc: 'หน้าจอแสดงออเดอร์สำหรับพ่อครัว', icon: '🍳' },
-        { href: '/orders', label: 'รายการออเดอร์', desc: 'จัดการคำสั่งซื้อทั้งหมด', icon: '○' },
-        { href: '/inventory', label: 'จัดการสต็อก', desc: 'คลังสินค้าและวัตถุดิบ', icon: '◇' },
-        { href: '/staff/tables', label: 'สรุปโต๊ะ', desc: 'ออเดอร์ตามสถานะ สำหรับพนักงานเสิร์ฟ', icon: '◎' },
-    ];
+    const [links, setLinks] = useState<NavLink[]>([]);
+
+    useEffect(() => {
+        const session = authStore.getSession();
+        const role = session?.role;
+
+        if (!role) {
+            setLinks(ALL_LINKS.filter((l) => l.href !== '/admin'));
+        } else {
+            setLinks(
+                ALL_LINKS.filter(
+                    (l) =>
+                        l.href === '/menu/A12' ||
+                        !l.roles ||
+                        l.roles.includes(role)
+                )
+            );
+        }
+    }, []);
 
     return (
         <main className="min-h-screen overflow-hidden" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
-            {/* Ambient background */}
             <div className="fixed inset-0 pointer-events-none">
                 <div
                     className="absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl opacity-40"
@@ -28,7 +59,6 @@ export default function StaffPage() {
             </div>
 
             <div className="relative min-h-screen flex flex-col">
-                {/* Hero */}
                 <header className="flex-1 flex flex-col items-center justify-center px-6 py-24">
                     <p
                         className="text-sm tracking-[0.3em] uppercase mb-4 font-medium"
@@ -44,7 +74,6 @@ export default function StaffPage() {
                     </p>
                 </header>
 
-                {/* Navigation */}
                 <nav className="px-6 pb-24">
                     <div className="max-w-3xl mx-auto">
                         <div className="grid gap-3 sm:grid-cols-2">
@@ -94,7 +123,6 @@ export default function StaffPage() {
                     </div>
                 </nav>
 
-                {/* Footer */}
                 <footer className="px-6 py-8 border-t" style={{ borderColor: 'var(--border)' }}>
                     <p className="text-center text-sm" style={{ color: 'var(--text-subtle)' }}>
                         © RanRHar · ระบบ POS สำหรับร้านอาหาร

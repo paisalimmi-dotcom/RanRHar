@@ -221,7 +221,7 @@ export async function orderRoutes(fastify: FastifyInstance) {
 
     // GET /orders - List all orders with payment status (owner, staff, cashier)
     fastify.get('/orders', {
-        preHandler: [authMiddleware, requireRole('owner', 'staff', 'cashier')],
+        preHandler: [authMiddleware, requireRole('owner', 'manager', 'staff', 'cashier')],
     }, async (request, reply) => {
         try {
             const result = await pool.query(
@@ -261,9 +261,9 @@ export async function orderRoutes(fastify: FastifyInstance) {
         }
     });
 
-    // PATCH /orders/:id/status - Update order status (owner, staff)
+    // PATCH /orders/:id/status - Update order status (manager, staff, chef)
     fastify.patch('/orders/:id/status', {
-        preHandler: [authMiddleware, requireRole('owner', 'staff')],
+        preHandler: [authMiddleware, requireRole('manager', 'staff', 'chef')],
         schema: {
             params: OrderIdParamSchema,
             body: UpdateOrderStatusBodySchema,

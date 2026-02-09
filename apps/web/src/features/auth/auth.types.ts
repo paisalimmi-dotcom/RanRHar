@@ -1,4 +1,4 @@
-export type Role = 'owner' | 'staff' | 'cashier'
+export type Role = 'owner' | 'manager' | 'staff' | 'cashier' | 'chef' | 'host' | 'delivery'
 
 export type AuthSession = {
     email: string

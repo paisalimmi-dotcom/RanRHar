@@ -168,7 +168,7 @@ describe('Order Routes', () => {
             const loginRes = await fastify.inject({
                 method: 'POST',
                 url: '/auth/login',
-                payload: { email: 'owner@test.com', password: 'password123' },
+                payload: { email: 'staff@test.com', password: 'password123' },
             });
             const cookie = loginRes.headers['set-cookie'];
             if (!cookie) throw new Error('No cookie');

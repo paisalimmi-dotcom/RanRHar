@@ -37,3 +37,12 @@ body {
 .font-display {
     font-family: 'Playfair Display', serif;
 }
+
+/* Hide scrollbar for category tabs, keep scroll */
+.scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}

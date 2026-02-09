@@ -20,10 +20,12 @@ if (JWT_SECRET === 'your-secret-key-change-in-production' || JWT_SECRET === 'cha
     throw new Error('FATAL: JWT_SECRET must be changed from default value. Generate using: openssl rand -base64 32');
 }
 
+export type AppRole = 'owner' | 'manager' | 'staff' | 'cashier' | 'chef' | 'host' | 'delivery';
+
 export interface JWTPayload {
     userId: number;
     email: string;
-    role: 'owner' | 'staff' | 'cashier';
+    role: AppRole;
 }
 
 declare module 'fastify' {
@@ -59,7 +61,7 @@ export async function authMiddleware(
     }
 }
 
-export function requireRole(...allowedRoles: Array<'owner' | 'staff' | 'cashier'>) {
+export function requireRole(...allowedRoles: AppRole[]) {
     return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
         if (!request.user) {
             return reply.status(401).send({ error: 'Unauthorized: No user context' });

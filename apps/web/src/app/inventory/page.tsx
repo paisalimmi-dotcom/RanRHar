@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { AuthGuard } from '@/features/auth/auth.guard';
-import { LogoutButton } from '@/features/auth/LogoutButton';
+import { StaffNav } from '@/features/auth/components/StaffNav';
 import InventoryTable from '@/features/inventory/components/InventoryTable';
 import ItemModal from '@/features/inventory/components/ItemModal';
 import StockAdjustmentModal from '@/features/inventory/components/StockAdjustmentModal';
@@ -71,7 +71,7 @@ export default function InventoryPage() {
     };
 
     return (
-        <AuthGuard allowedRoles={['owner', 'staff']}>
+        <AuthGuard allowedRoles={['manager', 'staff']}>
             <div className="min-h-screen bg-gray-100 pb-12">
                 {/* Header */}
                 <header className="bg-white shadow">
@@ -81,8 +81,7 @@ export default function InventoryPage() {
                             <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded uppercase">Beta</span>
                         </div>
                         <div className="flex items-center space-x-4">
-                            <a href="/orders" className="text-gray-600 hover:text-gray-900 font-medium">Orders</a>
-                            <LogoutButton />
+                            <StaffNav />
                         </div>
                     </div>
                 </header>

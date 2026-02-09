@@ -1,6 +1,7 @@
 'use client';
 
 import { AuthGuard } from '@/features/auth';
+import { StaffNav } from '@/features/auth/components/StaffNav';
 import { orderApi } from '@/features/order/order.api';
 import type { Order, OrderStatus } from '@/shared/types/order';
 import { useEffect, useState } from 'react';
@@ -59,7 +60,8 @@ function KDSContent() {
         <div className="min-h-screen bg-gray-900 text-white p-4">
             <header className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">KDS — Kitchen Display</h1>
-                <div className="flex gap-2">
+                <div className="flex gap-4 items-center">
+                    <StaffNav dark />
                     <span className="text-sm text-gray-400">
                         อัปเดตอัตโนมัติทุก 30 วินาที
                     </span>
@@ -153,7 +155,7 @@ function KDSContent() {
 
 export default function KDSPage() {
     return (
-        <AuthGuard allowedRoles={['owner', 'staff']}>
+        <AuthGuard allowedRoles={['manager', 'staff', 'chef']}>
             <KDSContent />
         </AuthGuard>
     );

@@ -18,7 +18,7 @@
 | **กดสั่งอาหาร** | `/checkout` | สรุปออเดอร์, ปุ่ม Place Order |
 | **สั่งสำเร็จ** | `/order/success/[id]` | แสดงเลขออเดอร์, รายการ, ยอดรวม |
 
-**ไม่เห็น:** ลิงก์ staff, orders, inventory, admin
+**ไม่เห็น:** ลิงก์ staff, orders, inventory, admin (เมนูซ่อน "เจ้าหน้าที่" เมื่อไม่ login)
 
 ---
 
@@ -47,12 +47,28 @@
 | **เปิด URL** | `/` | Redirect → `/menu/A12` |
 | **Login** | `/login` | กรอก email, password |
 | **หลัง Login** | `/menu/A12` | |
-| **Admin** | `/admin` | **owner เท่านั้น** — Dashboard (placeholder) |
-| **Orders** | `/orders` | ✅ |
-| **Inventory** | `/inventory` | ✅ |
+| **Admin** | `/admin` | **owner + manager** — Dashboard (owner ดูอย่างเดียว) |
+| **Orders** | `/orders` | ✅ ดูอย่างเดียว |
+| **สรุปโต๊ะ** | `/staff/tables` | ✅ ดูอย่างเดียว |
+| **Inventory** | `/inventory` | ❌ (manager, staff เท่านั้น — owner ดูไม่ได้) |
 | **Checkout** | `/checkout` | ✅ |
 
-**owner เห็น:** ทุกอย่างที่ staff เห็น + admin
+**owner เห็น:** ออเดอร์ สรุปโต๊ะ Dashboard — **ดูอย่างเดียว ไม่มีสิทธิ์แก้ไข**
+
+### 1.4 ผู้จัดการ (manager)
+
+| ขั้นตอน | หน้าจอที่เห็น | รายละเอียด |
+|---------|----------------|-------------|
+| **Admin** | `/admin` | Dashboard + จัดการเมนู |
+| **จัดการเมนู** | `/admin/menu` | เพิ่ม/แก้ไขหมวดหมู่และรายการเมนู |
+| **Inventory** | `/inventory` | จัดการสต็อกเต็มรูปแบบ |
+| **Orders** | `/orders` | ดู อัปเดตสถานะ บันทึกการชำระ |
+| **KDS** | `/staff/kds` | ✅ |
+| **สรุปโต๊ะ** | `/staff/tables` | ✅ |
+
+**manager เห็น:** ทุกอย่างที่ staff เห็น + Admin + จัดการเมนู
+
+**StaffNav:** แสดงลิงก์ตาม role — owner ดูได้, manager แก้ไขได้
 
 ---
 
@@ -98,8 +114,8 @@
 | `/staff` | ✅ | ✅ | ✅ | ✅ |
 | `/login` | ✅ | ✅ | ✅ | ✅ |
 | `/orders` | ❌ | ✅ | ✅ | ✅ |
-| `/inventory` | ❌ | ❌ | ✅ | ✅ |
-| `/admin` | ❌ | ❌ | ❌ | ✅ |
+| `/inventory` | ❌ | ❌ | ✅ | ✅ | ✅ |
+| `/admin` | ❌ | ❌ | ❌ | ✅ | ✅ |
 | `/unauthorized` | ✅ | ✅ | ✅ | ✅ |
 
 *หมายเหตุ: cashier เข้า /orders ได้แล้ว — เพื่อดูรายการและบันทึกการชำระ*
@@ -185,9 +201,9 @@
 ### Staff / Owner (หลัง Login)
 
 ```
-┌────────────────────────────────────────┐
-│  RanRHar    Orders | Inventory | Admin │
-├────────────────────────────────────────┤
+┌────────────────────────────────────────────────────────────────────────┐
+│  [หน้าที่]  Staff | ออเดอร์ | สรุปโต๊ะ | KDS | สต็อก | Admin | Logout   │
+├────────────────────────────────────────────────────────────────────────┤
 │  Orders Management                     │
 │  ┌──────────────────────────────────┐ │
 │  │ # │ Table │ Items │ Total │Status│ │

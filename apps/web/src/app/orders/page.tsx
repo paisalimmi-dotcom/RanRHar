@@ -1,12 +1,16 @@
 'use client'
 
-import { AuthGuard } from '@/features/auth'
+import { AuthGuard, authStore } from '@/features/auth'
+import { StaffNav } from '@/features/auth/components/StaffNav'
 import { orderApi } from '@/features/order/order.api'
 import type { Order, OrderStatus } from '@/shared/types/order'
 import { PaymentModal } from '@/features/payment/components/PaymentModal'
 import { paymentApi } from '@/features/payment/payment.api'
 import type { PaymentMethod } from '@/shared/types/payment'
 import { useEffect, useState } from 'react'
+
+const CAN_UPDATE_STATUS: import('@/features/auth/auth.types').Role[] = ['manager', 'staff', 'chef']
+const CAN_RECORD_PAYMENT: import('@/features/auth/auth.types').Role[] = ['manager', 'staff', 'cashier']
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
     PENDING: 'bg-yellow-100 text-yellow-800 border-yellow-300',
@@ -15,6 +19,10 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
 }
 
 export default function OrdersPage() {
+    const role = authStore.getSession()?.role
+    const canUpdateStatus = role && CAN_UPDATE_STATUS.includes(role)
+    const canRecordPayment = role && CAN_RECORD_PAYMENT.includes(role)
+
     const [orders, setOrders] = useState<Order[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -90,12 +98,18 @@ export default function OrdersPage() {
     }
 
     return (
-        <AuthGuard allowedRoles={['owner', 'staff', 'cashier']}>
-            <div className="min-h-screen bg-gray-50 p-8">
-                <div className="max-w-6xl mx-auto">
+        <AuthGuard allowedRoles={['owner', 'manager', 'staff', 'cashier', 'chef', 'host', 'delivery']}>
+            <div className="min-h-screen bg-gray-50">
+                <header className="bg-white shadow-sm border-b px-4 py-3">
+                    <div className="max-w-6xl mx-auto flex justify-between items-center">
+                        <h1 className="text-lg font-semibold text-gray-900">รายการออเดอร์</h1>
+                        <StaffNav />
+                    </div>
+                </header>
+                <div className="max-w-6xl mx-auto p-8">
                     <div className="flex justify-between items-center mb-6">
                         <div>
-                            <h1 className="text-3xl font-bold">Order Management</h1>
+                            <h2 className="text-2xl font-bold">Order Management</h2>
                             <p className="text-sm text-gray-600 mt-1">
                                 Showing {filteredOrders.length} of {orders.length} orders
                             </p>

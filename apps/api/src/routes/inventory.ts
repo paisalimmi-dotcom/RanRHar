@@ -23,7 +23,7 @@ interface AdjustStockRequest {
 export async function inventoryRoutes(fastify: FastifyInstance) {
     // GET /inventory - List all inventory items
     fastify.get('/inventory', {
-        preHandler: [authMiddleware, requireRole('owner', 'staff')],
+        preHandler: [authMiddleware, requireRole('manager', 'staff')],
     }, async (request, reply) => {
         try {
             const result = await pool.query(
@@ -43,7 +43,7 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
     fastify.post<{
         Body: CreateItemRequest;
     }>('/inventory', {
-        preHandler: [authMiddleware, requireRole('owner', 'staff')],
+        preHandler: [authMiddleware, requireRole('manager', 'staff')],
     }, async (request, reply) => {
         const { name, quantity, unit, minQuantity } = request.body;
 
@@ -89,7 +89,7 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
         Params: { id: string };
         Body: UpdateItemRequest & { adjustment?: AdjustStockRequest };
     }>('/inventory/:id', {
-        preHandler: [authMiddleware, requireRole('owner', 'staff')],
+        preHandler: [authMiddleware, requireRole('manager', 'staff')],
     }, async (request, reply) => {
         const { id } = request.params;
         const { name, minQuantity, adjustment } = request.body;
@@ -177,7 +177,7 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
     fastify.get<{
         Params: { id: string };
     }>('/inventory/:id/movements', {
-        preHandler: [authMiddleware, requireRole('owner', 'staff')],
+        preHandler: [authMiddleware, requireRole('manager', 'staff')],
     }, async (request, reply) => {
         const { id } = request.params;
 

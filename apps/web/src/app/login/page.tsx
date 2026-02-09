@@ -29,10 +29,10 @@ export default function LoginPage() {
 
         try {
             const user = await authStore.login(email, password)
-            if (user.role === 'owner' || user.role === 'staff') {
+            if (user.role === 'owner' || user.role === 'manager' || user.role === 'staff') {
                 router.push('/orders')
             } else {
-                router.push('/menu/demo-table')
+                router.push('/menu/A12')
             }
         } catch (err) {
             console.error('Login error:', err)
@@ -96,7 +96,7 @@ export default function LoginPage() {
 
                     <div className="text-sm text-gray-600 text-center mt-4">
                         <p>Test accounts (password: password123):</p>
-                        <p className="mt-1">owner@test.com | staff@test.com | cashier@test.com</p>
+                        <p className="mt-1">owner@test.com | manager@test.com | staff@test.com | cashier@test.com</p>
                     </div>
                 </form>
             </div>

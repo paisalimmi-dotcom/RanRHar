@@ -26,11 +26,11 @@ describe('Inventory Routes', () => {
             expect(res.statusCode).toBe(401);
         });
 
-        it('returns items when authenticated as owner', async () => {
+        it('returns items when authenticated as manager', async () => {
             const loginRes = await fastify.inject({
                 method: 'POST',
                 url: '/auth/login',
-                payload: { email: 'owner@test.com', password: 'password123' },
+                payload: { email: 'manager@test.com', password: 'password123' },
             });
             expect(loginRes.statusCode).toBe(200);
             const cookie = loginRes.headers['set-cookie'];
@@ -62,7 +62,7 @@ describe('Inventory Routes', () => {
             const loginRes = await fastify.inject({
                 method: 'POST',
                 url: '/auth/login',
-                payload: { email: 'owner@test.com', password: 'password123' },
+                payload: { email: 'manager@test.com', password: 'password123' },
             });
             const cookie = loginRes.headers['set-cookie'];
             if (!cookie) throw new Error('No cookie');
@@ -84,7 +84,7 @@ describe('Inventory Routes', () => {
             const loginRes = await fastify.inject({
                 method: 'POST',
                 url: '/auth/login',
-                payload: { email: 'owner@test.com', password: 'password123' },
+                payload: { email: 'manager@test.com', password: 'password123' },
             });
             const cookie = loginRes.headers['set-cookie'];
             if (!cookie) throw new Error('No cookie');
@@ -104,7 +104,7 @@ describe('Inventory Routes', () => {
             const loginRes = await fastify.inject({
                 method: 'POST',
                 url: '/auth/login',
-                payload: { email: 'owner@test.com', password: 'password123' },
+                payload: { email: 'manager@test.com', password: 'password123' },
             });
             const cookie = loginRes.headers['set-cookie'];
             if (!cookie) throw new Error('No cookie');
@@ -125,7 +125,7 @@ describe('Inventory Routes', () => {
             const loginRes = await fastify.inject({
                 method: 'POST',
                 url: '/auth/login',
-                payload: { email: 'owner@test.com', password: 'password123' },
+                payload: { email: 'manager@test.com', password: 'password123' },
             });
             const cookie = loginRes.headers['set-cookie'];
             if (!cookie) throw new Error('No cookie');
@@ -147,7 +147,7 @@ describe('Inventory Routes', () => {
             const loginRes = await fastify.inject({
                 method: 'POST',
                 url: '/auth/login',
-                payload: { email: 'owner@test.com', password: 'password123' },
+                payload: { email: 'manager@test.com', password: 'password123' },
             });
             const cookie = loginRes.headers['set-cookie'];
             if (!cookie) throw new Error('No cookie');

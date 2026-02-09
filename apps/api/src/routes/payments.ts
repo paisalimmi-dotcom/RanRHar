@@ -8,7 +8,7 @@ import { OrderIdParamSchema, RecordPaymentBodySchema } from '../schemas';
 export async function paymentRoutes(fastify: FastifyInstance) {
     // POST /orders/:id/payment - Record payment for an order
     fastify.post('/orders/:id/payment', {
-        preHandler: [authMiddleware, requireRole('staff', 'cashier')],
+        preHandler: [authMiddleware, requireRole('manager', 'staff', 'cashier')],
         schema: {
             params: OrderIdParamSchema,
             body: RecordPaymentBodySchema,
@@ -77,7 +77,7 @@ export async function paymentRoutes(fastify: FastifyInstance) {
 
     // GET /orders/:id/payment - Get payment details for an order
     fastify.get('/orders/:id/payment', {
-        preHandler: [authMiddleware, requireRole('owner', 'staff', 'cashier')],
+        preHandler: [authMiddleware, requireRole('owner', 'manager', 'staff', 'cashier', 'chef', 'host', 'delivery')],
         schema: {
             params: OrderIdParamSchema,
         },

@@ -1,10 +1,10 @@
 'use client';
 
 import { AuthGuard } from '@/features/auth';
+import { StaffNav } from '@/features/auth/components/StaffNav';
 import { orderApi } from '@/features/order/order.api';
 import type { Order } from '@/shared/types/order';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 
 function TablesContent() {
     const [orders, setOrders] = useState<Order[]>([]);
@@ -36,13 +36,8 @@ function TablesContent() {
         <div className="min-h-screen bg-gray-50 p-6">
             <header className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">สรุปโต๊ะ — พนักงานเสิร์ฟ</h1>
-                <div className="flex gap-2">
-                    <Link
-                        href="/staff"
-                        className="px-3 py-1 text-sm text-gray-600 hover:underline"
-                    >
-                        ← Staff
-                    </Link>
+                <div className="flex gap-2 items-center">
+                    <StaffNav />
                     <button
                         onClick={loadOrders}
                         disabled={loading}
@@ -140,7 +135,7 @@ function TablesContent() {
 
 export default function TablesPage() {
     return (
-        <AuthGuard allowedRoles={['owner', 'staff', 'cashier']}>
+        <AuthGuard allowedRoles={['owner', 'manager', 'staff', 'cashier', 'host', 'delivery']}>
             <TablesContent />
         </AuthGuard>
     );
