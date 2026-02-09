@@ -31,16 +31,28 @@ export default function AdminPage() {
                     )}
                     <div className="grid gap-4 sm:grid-cols-2">
                         {isManager && (
-                            <Link
-                                href="/admin/menu"
-                                className="block p-6 bg-white rounded-xl shadow hover:shadow-md border border-gray-200 hover:border-blue-300 transition-all"
-                            >
-                                <span className="text-2xl">🍽️</span>
-                                <h2 className="mt-2 text-lg font-semibold text-gray-900">จัดการเมนู</h2>
-                                <p className="mt-1 text-sm text-gray-600">
-                                    แก้ไขชื่อ ราคา รูปภาพ ของรายการเมนู
-                                </p>
-                            </Link>
+                            <>
+                                <Link
+                                    href="/admin/menu"
+                                    className="block p-6 bg-white rounded-xl shadow hover:shadow-md border border-gray-200 hover:border-blue-300 transition-all"
+                                >
+                                    <span className="text-2xl">🍽️</span>
+                                    <h2 className="mt-2 text-lg font-semibold text-gray-900">จัดการเมนู</h2>
+                                    <p className="mt-1 text-sm text-gray-600">
+                                        แก้ไขชื่อ ราคา รูปภาพ ของรายการเมนู
+                                    </p>
+                                </Link>
+                                <Link
+                                    href="/admin/reservations"
+                                    className="block p-6 bg-white rounded-xl shadow hover:shadow-md border border-gray-200 hover:border-blue-300 transition-all"
+                                >
+                                    <span className="text-2xl">📅</span>
+                                    <h2 className="mt-2 text-lg font-semibold text-gray-900">จัดการการจองโต๊ะ</h2>
+                                    <p className="mt-1 text-sm text-gray-600">
+                                        ดูและจัดการการจองโต๊ะของลูกค้า
+                                    </p>
+                                </Link>
+                            </>
                         )}
                     </div>
                 </main>
